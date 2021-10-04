@@ -3,6 +3,7 @@
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+#include "pitches.h"
 
 // Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
 // The pins for I2C are defined by the Wire-library. 
@@ -25,11 +26,21 @@ Adafruit_SSD1306 display(OLED_RESET);
 // 부저를 활용한 소리 효과
 // 버튼 적용 캘리브레이션 / 모드
 // 트랙 1 ~ 5
+
+// PIN, 변수 선언
 int trigPin = 3;
 int echoPin = 2;
 unsigned long currentMillis; // millis() 경과한 시간을 밀리 초로 반환한다.
 long cal_dist = 0; // 측정기와 트랙간의 거리를 기록해서 저장
 int cal_count = 0;
+int buzzer = 8 ;// setting controls the digital IO foot buzzer
+// notes in the melody:
+int melody[] = {NOTE_F3, NOTE_G3, NOTE_A3, NOTE_AS3};
+// note durations: 4 = quarter note, 8 = eighth note, etc.:
+int noteDurations[] = {8, 8, 8, 8};
+
+int start_melody[] = {NOTE_B5, NOTE_B5, NOTE_B5, NOTE_B6};
+int start_noteDurations[] = {2, 2, 2, 1};
 
 // 함수 선언
 long distance_check();
@@ -40,6 +51,7 @@ void setup() {
   // put your setup code here, to run once:
   pinMode(trigPin, OUTPUT); // 센서 Trig 핀
   pinMode(echoPin, INPUT);  // 센서 Echo 핀
+  pinMode (buzzer, OUTPUT) ;// set the digital IO pin mode, OUTPUT out of Wen
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);   
   display.display();
   delay(2000);
@@ -57,6 +69,18 @@ void loop() {
     snprintf(buf, sizeof(buf), "Distance %4d cm", int(temp_dist));
     Serial.println(buf);
     delay(100);
+    // 부저 테스트
+    for (int i = 0; i <4; i++) // Wen a frequency sound
+    {
+    int noteDuration = 1000 / noteDurations[i];
+    tone(buzzer, melody[i], noteDuration);
+    // to distinguish the notes, set a minimum time between them.
+    // the note's duration + 30% seems to work well:
+    int pauseBetweenNotes = noteDuration * 1.30;
+    delay(pauseBetweenNotes);
+    // stop the tone playing:
+    noTone(buzzer);    
+    }    
     display.clearDisplay();
     display.setTextSize(1);
     display.setTextColor(WHITE);
@@ -104,6 +128,14 @@ long calibration_dist() {
   Serial.print("### Calibration success ");
   Serial.print(int(dist_check));
   Serial.println(" cm" );
+  for (int i = 0; i <4; i++) // Wen a frequency sound
+  {
+  int noteDuration = 1000 / start_noteDurations[i];
+  tone(buzzer, start_melody[i], noteDuration);
+  delay(1000);
+  // stop the tone playing:
+  noTone(buzzer);    
+  }   
   return dist_check;
 }
 
