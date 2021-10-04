@@ -1,4 +1,23 @@
 #include <Arduino.h>
+#include <SPI.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+
+// Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
+// The pins for I2C are defined by the Wire-library. 
+// On an arduino UNO:       A4(SDA), A5(SCL)
+// On an arduino MEGA 2560: 20(SDA), 21(SCL)
+// On an arduino LEONARDO:   2(SDA),  3(SCL), ...
+#define OLED_RESET 4 // Reset pin # (or -1 if sharing Arduino reset pin)
+// #define SCREEN_ADDRESS 0x3C ///< See datasheet for Address; 0x3D for 128x64, 0x3C for 128x32
+// Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+Adafruit_SSD1306 display(OLED_RESET);
+
+#define XPOS 0
+#define YPOS 1
+#define DELTAY 2
+
 // Tamiya time checker with HC-SR04
 // OLED 추가 예정
 // 버튼을 이용한 캘리브레이션 적용
@@ -6,21 +25,54 @@
 // 부저를 활용한 소리 효과
 // 버튼 적용 캘리브레이션 / 모드
 // 트랙 1 ~ 5
-
-
 int trigPin = 3;
 int echoPin = 2;
 unsigned long currentMillis; // millis() 경과한 시간을 밀리 초로 반환한다.
 long cal_dist = 0; // 측정기와 트랙간의 거리를 기록해서 저장
 int cal_count = 0;
 
+// 함수 선언
+long distance_check();
+long calibration_dist();
+void testdrawbitmap(const uint8_t *bitmap, uint8_t w, uint8_t h);
+
 void setup() {
   // put your setup code here, to run once:
   pinMode(trigPin, OUTPUT); // 센서 Trig 핀
   pinMode(echoPin, INPUT);  // 센서 Echo 핀
+  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);   
+  display.display();
+  delay(2000);
+  // Clear the buffer.
+  display.clearDisplay();   
   Serial.begin(115200);  
+  // draw a bitmap icon and 'animate' movement
 }
 
+void loop() {
+  long temp_dist = distance_check() + 2;
+  if(cal_dist > temp_dist) {
+    Serial.println("Car Detected!");
+    char buf[20];
+    snprintf(buf, sizeof(buf), "Distance %4d cm", int(temp_dist));
+    Serial.println(buf);
+    delay(100);
+    display.clearDisplay();
+    display.setTextSize(1);
+    display.setTextColor(WHITE);
+    display.setCursor(0,0);
+    display.print("Average is = ");
+    display.println(temp_dist);
+    display.display();    
+  }
+  // 캘리브레이션
+  while (cal_count < 1) {
+    cal_dist = calibration_dist();
+    cal_count++;
+  }
+}
+
+// 거리를 측정해서 거리값을 반환한다
 long distance_check() {
   // put your main code here, to run repeatedly:
   digitalWrite(trigPin, HIGH);  // 센서에 Trig 신호 입력
@@ -32,38 +84,27 @@ long distance_check() {
   return distance;
 }
 
-void calibration_time() {
+// 거리를 측정해서 값이 연속해서 3번 일치하면 캘리브레이션 완료된 것으로 적용
+long calibration_dist() {
   currentMillis = millis();
-  cal_dist = distance_check();
-  Serial.println("####### Start calibration #######");
+  long dist_check = distance_check();
+  Serial.println("### Start calibration ###");
   while(millis()-currentMillis < 4000) {
-    if(cal_dist == distance_check()) {
-      Serial.println("####### Calibration confirm between speed checker and track distance. #######");
+    if(dist_check == distance_check()) {
+      Serial.println("### Calibration confirm between speed checker and track distance. ###");
       delay(1000);
     }
     else {
       currentMillis = millis();
-      cal_dist = distance_check();
-      Serial.println("####### On calibrating... #######");
+      dist_check = distance_check();
+      Serial.println("### On calibrating...###");
       delay(1000);
     }
   }
-  Serial.print("####### Calibration success ");
-  Serial.print(int(cal_dist));
+  Serial.print("### Calibration success ");
+  Serial.print(int(dist_check));
   Serial.println(" cm" );
+  return dist_check;
 }
 
-void loop() {
-  if(cal_dist > distance_check()+2) {
-    Serial.println("Car Detected!");
-    char buf[20];
-    snprintf(buf, sizeof(buf), "Distance %4d cm", int(distance_check()));
-    Serial.println(buf);
-    delay(100);
-  }
-  // 캘리브레이션
-  while (cal_count < 1) {
-    calibration_time();
-    cal_count++;
-  }
-}
+
