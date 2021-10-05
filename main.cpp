@@ -21,11 +21,16 @@ Adafruit_SSD1306 display(OLED_RESET);
 
 // Tamiya time checker with HC-SR04
 // OLED 추가 예정
-// 버튼을 이용한 캘리브레이션 적용
+// 버튼을 이용한 캘리브레이션 적용, 
+// A버튼 (스타트버튼)
+//    첫번째 누르면 캘리브레이션 후 Ready 모드
+//    두번째 누르면 시작을 알리는 부저음
+//    3초간 누르면 캘리브레이션 진행 후 Ready 모드 
 // 차량 검출 효과를 위한 LED 적용
 // 부저를 활용한 소리 효과
 // 버튼 적용 캘리브레이션 / 모드
 // 트랙 1 ~ 5
+// Common Cathode RGB LED(-)
 
 // PIN, 변수 선언
 int trigPin = 3;
@@ -41,11 +46,14 @@ int noteDurations[] = {8, 8, 8, 8};
 
 int start_melody[] = {NOTE_B5, NOTE_B5, NOTE_B5, NOTE_B6};
 int start_noteDurations[] = {2, 2, 2, 1};
+int red_light_pin= 9;
+int green_light_pin = 10;
+int blue_light_pin = 11;
 
 // 함수 선언
 long distance_check();
 long calibration_dist();
-void testdrawbitmap(const uint8_t *bitmap, uint8_t w, uint8_t h);
+void RGB_color(int red_light_value, int green_light_value, int blue_light_value);
 
 void setup() {
   // put your setup code here, to run once:
@@ -58,7 +66,12 @@ void setup() {
   // Clear the buffer.
   display.clearDisplay();   
   Serial.begin(115200);  
-  // draw a bitmap icon and 'animate' movement
+  RGB_color(255, 0, 0); // Red
+  delay(1000);
+  RGB_color(0, 255, 0); // Green
+  delay(1000);
+  RGB_color(0, 0, 255); // Blue
+  delay(1000);   
 }
 
 void loop() {
@@ -69,31 +82,40 @@ void loop() {
     snprintf(buf, sizeof(buf), "Distance %4d cm", int(temp_dist));
     Serial.println(buf);
     delay(100);
-    // 부저 테스트
-    for (int i = 0; i <4; i++) // Wen a frequency sound
-    {
-    int noteDuration = 1000 / noteDurations[i];
-    tone(buzzer, melody[i], noteDuration);
+    // 부저 테스트 
+    int noteDuration = 1000 / 2;
+    tone(buzzer, NOTE_B6, noteDuration);
     // to distinguish the notes, set a minimum time between them.
     // the note's duration + 30% seems to work well:
     int pauseBetweenNotes = noteDuration * 1.30;
     delay(pauseBetweenNotes);
     // stop the tone playing:
     noTone(buzzer);    
-    }    
+ 
     display.clearDisplay();
     display.setTextSize(1);
     display.setTextColor(WHITE);
     display.setCursor(0,0);
     display.print("Average is = ");
     display.println(temp_dist);
-    display.display();    
+    display.display();
+    for(int i = 0; i < 10; i++) 
+    {    
+      RGB_color(255, 0, 0); // Red
+      delay(20);
+      RGB_color(0, 255, 0); // Green
+      delay(20);
+      RGB_color(0, 0, 255); // Blue
+      delay(20);     
+      RGB_color(0, 0, 0); // Blue
+      delay(20); 
+    }
   }
   // 캘리브레이션
   while (cal_count < 1) {
     cal_dist = calibration_dist();
     cal_count++;
-  }
+  }   
 }
 
 // 거리를 측정해서 거리값을 반환한다
@@ -139,4 +161,9 @@ long calibration_dist() {
   return dist_check;
 }
 
-
+void RGB_color(int red_light_value, int green_light_value, int blue_light_value)
+ {
+  analogWrite(red_light_pin, red_light_value);
+  analogWrite(green_light_pin, green_light_value);
+  analogWrite(blue_light_pin, blue_light_value);
+}
