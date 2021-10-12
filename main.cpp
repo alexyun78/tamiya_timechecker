@@ -50,6 +50,9 @@ int red_light_pin= 9;
 int green_light_pin = 10;
 int blue_light_pin = 11;
 
+int btnA = 6;
+int btnB = 7;
+
 // 함수 선언
 long distance_check();
 long calibration_dist();
@@ -59,7 +62,9 @@ void setup() {
   // put your setup code here, to run once:
   pinMode(trigPin, OUTPUT); // 센서 Trig 핀
   pinMode(echoPin, INPUT);  // 센서 Echo 핀
-  pinMode (buzzer, OUTPUT) ;// set the digital IO pin mode, OUTPUT out of Wen
+  pinMode(buzzer, OUTPUT) ;// set the digital IO pin mode, OUTPUT out of Wen
+  pinMode(btnA, INPUT); // Pull_Down 방식 적용
+  pinMode(btnB, INPUT); // Pull_Down 방식 적용
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);   
   display.display();
   delay(2000);
@@ -76,10 +81,16 @@ void setup() {
 
 void loop() {
   long temp_dist = distance_check() + 2;
-  if(cal_dist > temp_dist) {
+  Serial.print("Button A = ");
+  Serial.println(digitalRead(btnA));
+  delay(500);
+  Serial.print("Button B = ");
+  Serial.println(digitalRead(btnB));
+  delay(500);
+  if(cal_dist >= temp_dist) {
     Serial.println("Car Detected!");
     char buf[20];
-    snprintf(buf, sizeof(buf), "Distance %4d cm", int(temp_dist));
+    snprintf(buf, sizeof(buf), "Distance %4d cm", int(temp_dist-2));
     Serial.println(buf);
     delay(100);
     // 부저 테스트 
@@ -127,6 +138,8 @@ long distance_check() {
 
   long duration = pulseIn(echoPin, HIGH);    // Echo pin: HIGH->Low 간격을 측정
   long distance = duration / 29 / 2;         // 거리(cm)로 변환 
+  Serial.print("Checked distance is ==>");
+  Serial.println(distance);
   return distance;
 }
 
@@ -136,28 +149,30 @@ long calibration_dist() {
   long dist_check = distance_check();
   Serial.println("### Start calibration ###");
   while(millis()-currentMillis < 4000) {
-    if(dist_check == distance_check()) {
-      Serial.println("### Calibration confirm between speed checker and track distance. ###");
+    if(dist_check == distance_check() && dist_check > 3) {
+      Serial.print("### Calibration confirm between speed checker and track distance. ==>");
+      Serial.println(dist_check);
       delay(1000);
     }
     else {
       currentMillis = millis();
       dist_check = distance_check();
-      Serial.println("### On calibrating...###");
+      Serial.print("### On calibrating... ==> ");
+      Serial.println(dist_check);
       delay(1000);
     }
   }
   Serial.print("### Calibration success ");
   Serial.print(int(dist_check));
   Serial.println(" cm" );
-  for (int i = 0; i <4; i++) // Wen a frequency sound
-  {
-  int noteDuration = 1000 / start_noteDurations[i];
-  tone(buzzer, start_melody[i], noteDuration);
-  delay(1000);
-  // stop the tone playing:
-  noTone(buzzer);    
-  }   
+  // for (int i = 0; i <4; i++) // Wen a frequency sound
+  // {
+  // int noteDuration = 1000 / start_noteDurations[i];
+  // tone(buzzer, start_melody[i], noteDuration);
+  // delay(1000);
+  // // stop the tone playing:
+  // noTone(buzzer);    
+  // }   
   return dist_check;
 }
 
