@@ -5,6 +5,20 @@
 #include <Adafruit_SSD1306.h>
 #include "pitches.h"
 
+// 1. 부팅시 Logo 출력
+// 2. 상단에 측정 기록된 거리 출력. 초기 출력 Distance 00 Track Round 3, Time Over 30, Best Record 00:00:00 Best Average 00:00:00
+// 3. A 버튼 클릭 안내문 Press the A button to correct the distance.
+// 4. Calibration 종료 후, Distance 09 출력
+// 5. 화면에 Game Start, Button A
+// 6. 부저 사운드와 함께 3, 2, 1, Go 출력
+// 7. 처음 차량 인지하면서 기록 시간 시작
+// 8. 총 3회 측정애서 게임 종료 함
+// 9. 게임중에는 버튼 입력 불가. 단, 한 트랙 측정 중 1분 초과시 자동 종료
+// 10. 게임 종료 후 다시 A버튼 누르면 게임 시작
+// 11. Game start 화면이나 종료된 화면에서 B 버튼 누르면 설정 화면 진입
+// 12. 1. Calibrate 2. Track 1~5(3), Time over 20~90(30), Best track time(기본), Best Average time 선택
+
+
 // Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
 // The pins for I2C are defined by the Wire-library. 
 // On an arduino UNO:       A4(SDA), A5(SCL)
@@ -33,12 +47,31 @@ Adafruit_SSD1306 display(OLED_RESET);
 // Common Cathode RGB LED(-)
 
 // PIN, 변수 선언
+// HC-SR 04
 int trigPin = 3;
 int echoPin = 2;
+// RGB LED
+int red_light_pin= 9;
+int green_light_pin = 10;
+int blue_light_pin = 11;
+// Button
+int btnA = 6;
+int btnB = 7;
+// Buzzer
+int buzzer = 8 ;// setting controls the digital IO foot buzzer
+
+// Time variable
 unsigned long currentMillis; // millis() 경과한 시간을 밀리 초로 반환한다.
+unsigned long soundMillis; // buzzer 관련 시간 변수
+unsigned long previousSndMillis; // buzzer 관련 이전 시간
+unsigned long btnMillis; // button 관련 시간 변수
+int inverval = 1000;
+
 long cal_dist = 0; // 측정기와 트랙간의 거리를 기록해서 저장
 int cal_count = 0;
-int buzzer = 8 ;// setting controls the digital IO foot buzzer
+int round = 3; // Default round 3
+int tover = 30; // Default time over 30 sec.
+
 // notes in the melody:
 int melody[] = {NOTE_F3, NOTE_G3, NOTE_A3, NOTE_AS3};
 // note durations: 4 = quarter note, 8 = eighth note, etc.:
@@ -46,16 +79,10 @@ int noteDurations[] = {8, 8, 8, 8};
 
 int start_melody[] = {NOTE_B5, NOTE_B5, NOTE_B5, NOTE_B6};
 int start_noteDurations[] = {2, 2, 2, 1};
-int red_light_pin= 9;
-int green_light_pin = 10;
-int blue_light_pin = 11;
-
-int btnA = 6;
-int btnB = 7;
 
 // 함수 선언
-long distance_check();
-long calibration_dist();
+long distance_check(); //측정된 거리값을 반환한다
+long calibration_dist(); //캘리브레이션 된 거리 값을 반환한다
 void RGB_color(int red_light_value, int green_light_value, int blue_light_value);
 
 void setup() {
@@ -76,7 +103,16 @@ void setup() {
   RGB_color(0, 255, 0); // Green
   delay(1000);
   RGB_color(0, 0, 255); // Blue
-  delay(1000);   
+  delay(1000);  
+  // Status bar display
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.setCursor(0,0);
+  char buf[20];
+  snprintf(buf, sizeof(buf), "D %2d R %d T %2d ", int(cal_dist), round, tover);  
+  display.println(buf);  
+  display.display();    
 }
 
 void loop() {
@@ -126,6 +162,7 @@ void loop() {
   while (cal_count < 1) {
     cal_dist = calibration_dist();
     cal_count++;
+    start_sound();
   }   
 }
 
@@ -165,14 +202,6 @@ long calibration_dist() {
   Serial.print("### Calibration success ");
   Serial.print(int(dist_check));
   Serial.println(" cm" );
-  // for (int i = 0; i <4; i++) // Wen a frequency sound
-  // {
-  // int noteDuration = 1000 / start_noteDurations[i];
-  // tone(buzzer, start_melody[i], noteDuration);
-  // delay(1000);
-  // // stop the tone playing:
-  // noTone(buzzer);    
-  // }   
   return dist_check;
 }
 
@@ -181,4 +210,18 @@ void RGB_color(int red_light_value, int green_light_value, int blue_light_value)
   analogWrite(red_light_pin, red_light_value);
   analogWrite(green_light_pin, green_light_value);
   analogWrite(blue_light_pin, blue_light_value);
+}
+
+void start_sound() {
+  unsigned long currentSndMillis = millis();
+  for (int i = 0; i <4; i++) // Wen a frequency sound
+  {
+    int noteDuration = 1000 / start_noteDurations[i];
+    tone(buzzer, start_melody[i], noteDuration);
+    if (currentSndMillis - previousSndMillis >= inverval) {
+      previousSndMillis = currentSndMillis;
+      noTone(buzzer); 
+      currentSndMillis = millis();  
+    }
+  }     
 }
