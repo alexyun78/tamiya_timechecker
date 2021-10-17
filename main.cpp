@@ -69,8 +69,9 @@ int inverval = 1000;
 
 long cal_dist = 0; // 측정기와 트랙간의 거리를 기록해서 저장
 int cal_count = 0;
-int round = 3; // Default round 3
+int gRound = 3; // Default round 3
 int tover = 30; // Default time over 30 sec.
+int detect_count = 0;
 
 // notes in the melody:
 int melody[] = {NOTE_F3, NOTE_G3, NOTE_A3, NOTE_AS3};
@@ -84,6 +85,8 @@ int start_noteDurations[] = {2, 2, 2, 1};
 long distance_check(); //측정된 거리값을 반환한다
 long calibration_dist(); //캘리브레이션 된 거리 값을 반환한다
 void RGB_color(int red_light_value, int green_light_value, int blue_light_value);
+void start_sound();
+void display_status();
 
 void setup() {
   // put your setup code here, to run once:
@@ -105,64 +108,78 @@ void setup() {
   RGB_color(0, 0, 255); // Blue
   delay(1000);  
   // Status bar display
-  display.clearDisplay();
-  display.setTextSize(1);
-  display.setTextColor(WHITE);
-  display.setCursor(0,0);
-  char buf[20];
-  snprintf(buf, sizeof(buf), "D %2d R %d T %2d ", int(cal_dist), round, tover);  
-  display.println(buf);  
-  display.display();    
+  display_status();  
+  // display.clearDisplay();
+  // display.setTextSize(1);
+  // display.setTextColor(WHITE);
+  // display.setCursor(0,0);
+  // char buf[20];
+  // snprintf(buf, sizeof(buf), "D %2d  R %d  T %2d ", int(cal_dist), gRound, tover);  
+  // display.println(buf);  
+  // display.display();    
 }
 
 void loop() {
   long temp_dist = distance_check() + 2;
-  Serial.print("Button A = ");
-  Serial.println(digitalRead(btnA));
-  delay(500);
-  Serial.print("Button B = ");
-  Serial.println(digitalRead(btnB));
-  delay(500);
+  // Serial.print("Button A = ");
+  // Serial.println(digitalRead(btnA));
+  // delay(500);
+  // Serial.print("Button B = ");
+  // Serial.println(digitalRead(btnB));
+  // delay(500);
   if(cal_dist >= temp_dist) {
-    Serial.println("Car Detected!");
-    char buf[20];
-    snprintf(buf, sizeof(buf), "Distance %4d cm", int(temp_dist-2));
-    Serial.println(buf);
-    delay(100);
-    // 부저 테스트 
-    int noteDuration = 1000 / 2;
-    tone(buzzer, NOTE_B6, noteDuration);
-    // to distinguish the notes, set a minimum time between them.
-    // the note's duration + 30% seems to work well:
-    int pauseBetweenNotes = noteDuration * 1.30;
-    delay(pauseBetweenNotes);
-    // stop the tone playing:
-    noTone(buzzer);    
- 
-    display.clearDisplay();
-    display.setTextSize(1);
-    display.setTextColor(WHITE);
-    display.setCursor(0,0);
-    display.print("Average is = ");
-    display.println(temp_dist);
-    display.display();
-    for(int i = 0; i < 10; i++) 
-    {    
-      RGB_color(255, 0, 0); // Red
-      delay(20);
-      RGB_color(0, 255, 0); // Green
-      delay(20);
-      RGB_color(0, 0, 255); // Blue
-      delay(20);     
-      RGB_color(0, 0, 0); // Blue
-      delay(20); 
+    detect_count++;
+    if(detect_count>3){
+      Serial.println("Car Detected!");
+      char buf[20];
+      snprintf(buf, sizeof(buf), "Distance %4d cm", int(temp_dist-2));
+      Serial.println(buf);
+      delay(100);
+      display.clearDisplay();
+      display.setTextSize(1);
+      display.setTextColor(WHITE);
+      display.setCursor(0,0);
+      display.print("Average is = ");
+      display.println(temp_dist);
+      display.print("Average is = ");
+      display.println(temp_dist);
+      display.print("Average is = ");
+      display.println(temp_dist);
+      display.print("Average is = ");
+      display.println(temp_dist);                 
+      display.display();
+      for(int i = 0; i < 10; i++) 
+      {    
+        RGB_color(255, 0, 0); // Red
+        delay(20);
+        RGB_color(0, 255, 0); // Green
+        delay(20);
+        RGB_color(0, 0, 255); // Blue
+        delay(20);     
+        RGB_color(0, 0, 0); // Blue
+        delay(20); 
+      }
+      detect_count=0;
     }
+
+    // // 부저 테스트 
+    // int noteDuration = 1000 / 2;
+    // tone(buzzer, NOTE_B6, noteDuration);
+    // // to distinguish the notes, set a minimum time between them.
+    // // the note's duration + 30% seems to work well:
+    // int pauseBetweenNotes = noteDuration * 1.30;
+    // delay(pauseBetweenNotes);
+    // // stop the tone playing:
+    // noTone(buzzer);    
+ 
+
   }
   // 캘리브레이션
   while (cal_count < 1) {
     cal_dist = calibration_dist();
     cal_count++;
     start_sound();
+    display_status(); 
   }   
 }
 
@@ -224,4 +241,16 @@ void start_sound() {
       currentSndMillis = millis();  
     }
   }     
+}
+
+void display_status() {
+    // Status bar display
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.setCursor(0,0);
+  char buf[20];
+  snprintf(buf, sizeof(buf), "D %2d  R %d  T %2d ", int(cal_dist), gRound, tover);  
+  display.println(buf);  
+  display.display(); 
 }
