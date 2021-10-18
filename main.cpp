@@ -87,6 +87,7 @@ long calibration_dist(); //캘리브레이션 된 거리 값을 반환한다
 void RGB_color(int red_light_value, int green_light_value, int blue_light_value);
 void start_sound();
 void display_status();
+void display_time(unsigned long startMillis);
 
 void setup() {
   // put your setup code here, to run once:
@@ -121,12 +122,8 @@ void setup() {
 
 void loop() {
   long temp_dist = distance_check() + 2;
-  // Serial.print("Button A = ");
-  // Serial.println(digitalRead(btnA));
-  // delay(500);
-  // Serial.print("Button B = ");
-  // Serial.println(digitalRead(btnB));
-  // delay(500);
+  display_status();
+  display_time(millis());
   if(cal_dist >= temp_dist) {
     detect_count++;
     if(detect_count>3){
@@ -135,19 +132,20 @@ void loop() {
       snprintf(buf, sizeof(buf), "Distance %4d cm", int(temp_dist-2));
       Serial.println(buf);
       delay(100);
-      display.clearDisplay();
-      display.setTextSize(1);
-      display.setTextColor(WHITE);
-      display.setCursor(0,0);
-      display.print("Average is = ");
-      display.println(temp_dist);
-      display.print("Average is = ");
-      display.println(temp_dist);
-      display.print("Average is = ");
-      display.println(temp_dist);
-      display.print("Average is = ");
-      display.println(temp_dist);                 
-      display.display();
+      // display_status();
+      // display.clearDisplay();
+      // display.setTextSize(1.8);
+      // display.setTextColor(WHITE);
+      // display.setCursor(0,0);
+      // display.print("Average is = ");
+      // display.println(temp_dist);
+      // display.print("Average is = ");
+      // display.println(temp_dist);
+      // display.print("Average is = ");
+      // display.println(temp_dist);
+      // display.print("Average is = ");
+      // display.println(temp_dist);                 
+      // display.display();
       for(int i = 0; i < 10; i++) 
       {    
         RGB_color(255, 0, 0); // Red
@@ -233,24 +231,49 @@ void start_sound() {
   unsigned long currentSndMillis = millis();
   for (int i = 0; i <4; i++) // Wen a frequency sound
   {
+    previousSndMillis = currentSndMillis;
     int noteDuration = 1000 / start_noteDurations[i];
     tone(buzzer, start_melody[i], noteDuration);
-    if (currentSndMillis - previousSndMillis >= inverval) {
-      previousSndMillis = currentSndMillis;
-      noTone(buzzer); 
+    while (currentSndMillis - previousSndMillis <= inverval) {          
       currentSndMillis = millis();  
     }
+    noTone(buzzer); 
   }     
 }
 
 void display_status() {
-    // Status bar display
-  display.clearDisplay();
+  // Status bar display
+  // display.clearDisplay();
+  // display.drawRect(0,0,128,13,BLACK);
   display.setTextSize(1);
   display.setTextColor(WHITE);
   display.setCursor(0,0);
   char buf[20];
   snprintf(buf, sizeof(buf), "D %2d  R %d  T %2d ", int(cal_dist), gRound, tover);  
+  display.println(buf);  
+  display.display(); 
+}
+
+void check_btn() {
+  // Serial.print("Button A = ");
+  // Serial.println(digitalRead(btnA));
+  // delay(500);
+  // Serial.print("Button B = ");
+  // Serial.println(digitalRead(btnB));
+  // delay(500);  
+}
+
+void display_time(unsigned long startMillis) {
+  unsigned long min = startMillis/60000;
+  unsigned long sec = startMillis/1000%60;
+  unsigned long mils = startMillis%1000;
+  display.clearDisplay();
+  // display.drawRect(0,16,128,25,BLACK);
+  display.setTextSize(2);
+  display.setTextColor(WHITE);
+  display.setCursor(0,16);
+  char buf[20];
+  snprintf(buf, sizeof(buf), "%02d:%02d:%02d", int(min), int(sec), int(mils));  
   display.println(buf);  
   display.display(); 
 }
