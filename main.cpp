@@ -86,8 +86,9 @@ long distance_check(); //측정된 거리값을 반환한다
 long calibration_dist(); //캘리브레이션 된 거리 값을 반환한다
 void RGB_color(int red_light_value, int green_light_value, int blue_light_value);
 void start_sound();
-void display_status();
+void display_status(int);
 void display_time(unsigned long startMillis);
+void display_round();
 
 void setup() {
   // put your setup code here, to run once:
@@ -109,7 +110,7 @@ void setup() {
   RGB_color(0, 0, 255); // Blue
   delay(1000);  
   // Status bar display
-  display_status();  
+  display_status(0);  
   // display.clearDisplay();
   // display.setTextSize(1);
   // display.setTextColor(WHITE);
@@ -122,7 +123,7 @@ void setup() {
 
 void loop() {
   long temp_dist = distance_check() + 2;
-  display_status();
+  // display_status();
   display_time(millis());
   if(cal_dist >= temp_dist) {
     detect_count++;
@@ -132,7 +133,8 @@ void loop() {
       snprintf(buf, sizeof(buf), "Distance %4d cm", int(temp_dist-2));
       Serial.println(buf);
       delay(100);
-      // display_status();
+      display_status(int(temp_dist-2));
+      display_round();
       // display.clearDisplay();
       // display.setTextSize(1.8);
       // display.setTextColor(WHITE);
@@ -177,7 +179,7 @@ void loop() {
     cal_dist = calibration_dist();
     cal_count++;
     start_sound();
-    display_status(); 
+    display_status(0); 
   }   
 }
 
@@ -241,16 +243,19 @@ void start_sound() {
   }     
 }
 
-void display_status() {
+void display_status(int measure) {
   // Status bar display
   // display.clearDisplay();
-  // display.drawRect(0,0,128,13,BLACK);
-  display.setTextSize(1);
+  display.fillRect(0,0,128,15,BLACK);
+  display.setTextSize(2);
   display.setTextColor(WHITE);
   display.setCursor(0,0);
   char buf[20];
-  snprintf(buf, sizeof(buf), "D %2d  R %d  T %2d ", int(cal_dist), gRound, tover);  
-  display.println(buf);  
+  snprintf(buf, sizeof(buf), "%02dcm[%02d]", int(cal_dist), measure);  
+  display.println(buf);
+  display.fillRoundRect(100,0,8,15,1,WHITE);  
+  display.fillRoundRect(110,0,8,15,1,WHITE);  
+  display.fillRoundRect(120,0,8,15,1,WHITE);  
   display.display(); 
 }
 
@@ -267,13 +272,27 @@ void display_time(unsigned long startMillis) {
   unsigned long min = startMillis/60000;
   unsigned long sec = startMillis/1000%60;
   unsigned long mils = startMillis%1000;
-  display.clearDisplay();
-  // display.drawRect(0,16,128,25,BLACK);
-  display.setTextSize(2);
+  mils = mils/10;
+  // display.clearDisplay();
+  display.fillRect(0,16,128,24,BLACK);
+  display.setTextSize(3);
   display.setTextColor(WHITE);
   display.setCursor(0,16);
   char buf[20];
-  snprintf(buf, sizeof(buf), "%02d:%02d:%02d", int(min), int(sec), int(mils));  
+  snprintf(buf, sizeof(buf), "%1d:%02d:%02d", int(min), int(sec), int(mils));  
   display.println(buf);  
+  display.display(); 
+}
+
+void display_round(){
+// display.clearDisplay();
+  display.fillRect(0,40,128,28,BLACK);
+  display.setTextSize(3);
+  display.setTextColor(WHITE);
+  display.setCursor(0,40);
+  // char buf[20];
+  // snprintf(buf, sizeof(buf), "%02d:%02d:%02d", int(min), int(sec), int(mils));  
+  // display.println(buf);  
+  display.println("1St Round");
   display.display(); 
 }
