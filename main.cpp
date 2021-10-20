@@ -5,20 +5,6 @@
 #include <Adafruit_SSD1306.h>
 #include "pitches.h"
 
-// 1. 부팅시 Logo 출력
-// 2. 상단에 측정 기록된 거리 출력. 초기 출력 Distance 00 Track Round 3, Time Over 30, Best Record 00:00:00 Best Average 00:00:00
-// 3. A 버튼 클릭 안내문 Press the A button to correct the distance.
-// 4. Calibration 종료 후, Distance 09 출력
-// 5. 화면에 Game Start, Button A
-// 6. 부저 사운드와 함께 3, 2, 1, Go 출력
-// 7. 처음 차량 인지하면서 기록 시간 시작
-// 8. 총 3회 측정애서 게임 종료 함
-// 9. 게임중에는 버튼 입력 불가. 단, 한 트랙 측정 중 1분 초과시 자동 종료
-// 10. 게임 종료 후 다시 A버튼 누르면 게임 시작
-// 11. Game start 화면이나 종료된 화면에서 B 버튼 누르면 설정 화면 진입
-// 12. 1. Calibrate 2. Track 1~5(3), Time over 20~90(30), Best track time(기본), Best Average time 선택
-
-
 // Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
 // The pins for I2C are defined by the Wire-library. 
 // On an arduino UNO:       A4(SDA), A5(SCL)
@@ -29,9 +15,9 @@
 // Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 Adafruit_SSD1306 display(OLED_RESET);
 
-#define XPOS 0
-#define YPOS 1
-#define DELTAY 2
+#define line1 15
+#define line2 40
+#define line3 41
 
 // Tamiya time checker with HC-SR04
 // OLED 추가 예정
@@ -72,6 +58,9 @@ int cal_count = 0;
 int gRound = 3; // Default round 3
 int tover = 30; // Default time over 30 sec.
 int detect_count = 0;
+boolean btnA_flag = false;
+int btnA_push = 0;
+int btnB_push = 0;
 
 // notes in the melody:
 int melody[] = {NOTE_F3, NOTE_G3, NOTE_A3, NOTE_AS3};
@@ -89,6 +78,7 @@ void start_sound();
 void display_status(int);
 void display_time(unsigned long startMillis);
 void display_round();
+void check_btn();
 
 void setup() {
   // put your setup code here, to run once:
@@ -122,8 +112,11 @@ void setup() {
 }
 
 void loop() {
+  while(!btnA_flag) { // A 버튼을 누르지 않았다면
+    check_btn();
+  }
   long temp_dist = distance_check() + 2;
-  // display_status();
+
   display_time(millis());
   if(cal_dist >= temp_dist) {
     detect_count++;
@@ -135,19 +128,6 @@ void loop() {
       delay(100);
       display_status(int(temp_dist-2));
       display_round();
-      // display.clearDisplay();
-      // display.setTextSize(1.8);
-      // display.setTextColor(WHITE);
-      // display.setCursor(0,0);
-      // display.print("Average is = ");
-      // display.println(temp_dist);
-      // display.print("Average is = ");
-      // display.println(temp_dist);
-      // display.print("Average is = ");
-      // display.println(temp_dist);
-      // display.print("Average is = ");
-      // display.println(temp_dist);                 
-      // display.display();
       for(int i = 0; i < 10; i++) 
       {    
         RGB_color(255, 0, 0); // Red
@@ -161,6 +141,8 @@ void loop() {
       }
       detect_count=0;
     }
+  }
+
 
     // // 부저 테스트 
     // int noteDuration = 1000 / 2;
@@ -172,15 +154,13 @@ void loop() {
     // // stop the tone playing:
     // noTone(buzzer);    
  
-
-  }
-  // 캘리브레이션
-  while (cal_count < 1) {
-    cal_dist = calibration_dist();
-    cal_count++;
-    start_sound();
-    display_status(0); 
-  }   
+  // // 캘리브레이션
+  // while (cal_count < 1) {
+  //   cal_dist = calibration_dist();
+  //   cal_count++;
+  //   start_sound();
+  //   display_status(0); 
+  // }   
 }
 
 // 거리를 측정해서 거리값을 반환한다
@@ -260,12 +240,26 @@ void display_status(int measure) {
 }
 
 void check_btn() {
-  // Serial.print("Button A = ");
-  // Serial.println(digitalRead(btnA));
-  // delay(500);
-  // Serial.print("Button B = ");
-  // Serial.println(digitalRead(btnB));
-  // delay(500);  
+  btnMillis = millis();
+  unsigned long previousbtnMillis = btnMillis;
+  while(btnMillis-previousbtnMillis < 200) {
+    btnMillis = millis();
+    if(digitalRead(btnA)==1) {      
+      Serial.print("Button A = ");
+      Serial.println(digitalRead(btnA));
+    } else {
+      previousbtnMillis = btnMillis;
+    }
+  }
+  btnA_push++;
+  Serial.println(btnA_push);  
+  if(btnA_push==1) {
+    cal_dist = calibration_dist();
+  } 
+  else if(btnA_push==2) {
+      start_sound();
+      btnA_flag = true;
+  }  
 }
 
 void display_time(unsigned long startMillis) {
