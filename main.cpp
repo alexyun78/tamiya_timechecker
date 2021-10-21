@@ -15,10 +15,6 @@
 // Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 Adafruit_SSD1306 display(OLED_RESET);
 
-#define line1 15
-#define line2 40
-#define line3 41
-
 // Tamiya time checker with HC-SR04
 // OLED 추가 예정
 // 버튼을 이용한 캘리브레이션 적용, 
@@ -42,43 +38,43 @@ int green_light_pin = 10;
 int blue_light_pin = 11;
 // Button
 int btnA = 6;
-int btnB = 7;
+// int btnB = 7;
 // Buzzer
 int buzzer = 8 ;// setting controls the digital IO foot buzzer
+int RBG_count = 0;
 
 // Time variable
 unsigned long currentMillis; // millis() 경과한 시간을 밀리 초로 반환한다.
 unsigned long soundMillis; // buzzer 관련 시간 변수
 unsigned long previousSndMillis; // buzzer 관련 이전 시간
 unsigned long btnMillis; // button 관련 시간 변수
-int inverval = 1000;
+unsigned long previousRGBMillis = 0;
 
 long cal_dist = 0; // 측정기와 트랙간의 거리를 기록해서 저장
-int cal_count = 0;
-int gRound = 3; // Default round 3
-int tover = 30; // Default time over 30 sec.
-int detect_count = 0;
-boolean btnA_flag = false;
+int gRound = 0; // Default round 3
+int detect_count = 0; // 일시적으로 차량이 검출된 것을 카운트한다.
+boolean btnA_flag = false; // button A 동작 확인
+boolean car_detectOK = false;
+ 
 int btnA_push = 0;
-int btnB_push = 0;
 
-// notes in the melody:
-int melody[] = {NOTE_F3, NOTE_G3, NOTE_A3, NOTE_AS3};
-// note durations: 4 = quarter note, 8 = eighth note, etc.:
-int noteDurations[] = {8, 8, 8, 8};
+  // // notes in the melody:
+  // int melody[] = {NOTE_F3, NOTE_G3, NOTE_A3, NOTE_AS3};
+  // // note durations: 4 = quarter note, 8 = eighth note, etc.:
+  // int noteDurations[] = {8, 8, 8, 8};  
 
-int start_melody[] = {NOTE_B5, NOTE_B5, NOTE_B5, NOTE_B6};
-int start_noteDurations[] = {2, 2, 2, 1};
+
 
 // 함수 선언
-long distance_check(); //측정된 거리값을 반환한다
-long calibration_dist(); //캘리브레이션 된 거리 값을 반환한다
+long distance_check(); // 현재 측정한 거리값을 반환한다
+long calibration_dist(); //캘리브레이션 측정 후, 거리 값을 반환한다
 void RGB_color(int red_light_value, int green_light_value, int blue_light_value);
-void start_sound();
-void display_status(int);
-void display_time(unsigned long startMillis);
-void display_round();
-void check_btn();
+void start_sound(); // 스타트 버튼을 눌렀을 때 사운드 출력
+void display_status(int); // 디스플레이 상단의 상태를 보여준다. 캘리브레이션 된 거리, 현재 차량을 측정한 거리, 현재 진행중인 라운드[라운드박스]
+void display_time(unsigned long startMillis); // 경기가 시작되고 진행된 전체 시간을 보여준다.
+void display_round(); // 현재 라운드의 시간 기록을 보여줍니다. 1라운드, 2라운드, 3라운드의 각 시간을 보여준다 1R 0:00:00, 2R 0:00:00, 3R 0:00:00
+void check_btn(); // 버튼이 눌려진 것을 체크합니다.
+void car_detect();
 
 void setup() {
   // put your setup code here, to run once:
@@ -86,7 +82,7 @@ void setup() {
   pinMode(echoPin, INPUT);  // 센서 Echo 핀
   pinMode(buzzer, OUTPUT) ;// set the digital IO pin mode, OUTPUT out of Wen
   pinMode(btnA, INPUT); // Pull_Down 방식 적용
-  pinMode(btnB, INPUT); // Pull_Down 방식 적용
+  // pinMode(btnB, INPUT); // Pull_Down 방식 적용
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);   
   display.display();
   delay(2000);
@@ -100,7 +96,7 @@ void setup() {
   RGB_color(0, 0, 255); // Blue
   delay(1000);  
   // Status bar display
-  display_status(0);  
+  // display_status(0);  
   // display.clearDisplay();
   // display.setTextSize(1);
   // display.setTextColor(WHITE);
@@ -115,33 +111,64 @@ void loop() {
   while(!btnA_flag) { // A 버튼을 누르지 않았다면
     check_btn();
   }
-  long temp_dist = distance_check() + 2;
+  car_detect();
+  // long temp_dist = distance_check() + 2;
 
   display_time(millis());
-  if(cal_dist >= temp_dist) {
-    detect_count++;
-    if(detect_count>3){
-      Serial.println("Car Detected!");
-      char buf[20];
-      snprintf(buf, sizeof(buf), "Distance %4d cm", int(temp_dist-2));
-      Serial.println(buf);
-      delay(100);
-      display_status(int(temp_dist-2));
-      display_round();
-      for(int i = 0; i < 10; i++) 
-      {    
-        RGB_color(255, 0, 0); // Red
-        delay(20);
-        RGB_color(0, 255, 0); // Green
-        delay(20);
-        RGB_color(0, 0, 255); // Blue
-        delay(20);     
-        RGB_color(0, 0, 0); // Blue
-        delay(20); 
-      }
-      detect_count=0;
+  Serial.print("car_detectOK = ");
+  Serial.print(car_detectOK);
+  Serial.print("RBG_count = ");
+  Serial.print(RBG_count);
+  // 차량이 검출된 상태에서 RGB LED 동작
+  if(car_detectOK && RBG_count < 3) {
+    unsigned long currentRGBMillis = millis();
+    if(currentRGBMillis-previousRGBMillis < 20 ) {
+      RGB_color(255, 0, 0); // Red 
+      Serial.println("RED -------------------");
+    }
+    else if(currentRGBMillis-previousRGBMillis < 40 ) {
+      RGB_color(0, 255, 0); // Green
+      Serial.println("Green -------------------");
+    }
+    else if(currentRGBMillis-previousRGBMillis < 60 ) {
+      RGB_color(0, 0, 255); // Blue
+      Serial.println("Blue -------------------");
+    }
+    else {
+      RGB_color(0, 0, 0); // OFF
+      RBG_count++;
+      previousRGBMillis = currentRGBMillis;
     }
   }
+  else if(RBG_count>3) {
+    car_detectOK = false;
+  }
+
+
+  // if(cal_dist >= temp_dist) {
+  //   detect_count++;
+  //   if(detect_count>3){
+  //     Serial.println("Car Detected!");
+  //     char buf[20];
+  //     snprintf(buf, sizeof(buf), "Distance %4d cm", int(temp_dist-2));
+  //     Serial.println(buf);
+  //     delay(100);
+  //     display_status(int(temp_dist-2));
+  //     display_round();
+  //     for(int i = 0; i < 10; i++) 
+  //     {    
+  //       RGB_color(255, 0, 0); // Red
+  //       delay(20);
+  //       RGB_color(0, 255, 0); // Green
+  //       delay(20);
+  //       RGB_color(0, 0, 255); // Blue
+  //       delay(20);     
+  //       RGB_color(0, 0, 0); // OFF
+  //       delay(20); 
+  //     }
+  //     detect_count=0;
+  //   }
+  // }
 
 
     // // 부저 테스트 
@@ -162,6 +189,24 @@ void loop() {
   //   display_status(0); 
   // }   
 }
+void car_detect() {
+  long temp_dist = distance_check() + 2;
+  Serial.print("temp_dist = ");
+  Serial.println(temp_dist);
+  if(cal_dist >= temp_dist) {    
+    detect_count++;
+    Serial.println(detect_count);
+    if(detect_count>3) { // 차량 검출 확인
+      car_detectOK = true;
+      display_status(int(temp_dist-2));
+      display_round();
+      RBG_count=0;
+      detect_count=0;
+      gRound++;
+    }
+  }
+}
+
 
 // 거리를 측정해서 거리값을 반환한다
 long distance_check() {
@@ -211,12 +256,14 @@ void RGB_color(int red_light_value, int green_light_value, int blue_light_value)
 
 void start_sound() {
   unsigned long currentSndMillis = millis();
+  int start_melody[] = {NOTE_B5, NOTE_B5, NOTE_B5, NOTE_B6};
+  int start_noteDurations[] = {2, 2, 2, 1};
   for (int i = 0; i <4; i++) // Wen a frequency sound
   {
     previousSndMillis = currentSndMillis;
     int noteDuration = 1000 / start_noteDurations[i];
     tone(buzzer, start_melody[i], noteDuration);
-    while (currentSndMillis - previousSndMillis <= inverval) {          
+    while (currentSndMillis - previousSndMillis <= 1000) {          
       currentSndMillis = millis();  
     }
     noTone(buzzer); 
@@ -225,7 +272,7 @@ void start_sound() {
 
 void display_status(int measure) {
   // Status bar display
-  // display.clearDisplay();
+  display.clearDisplay();
   display.fillRect(0,0,128,15,BLACK);
   display.setTextSize(2);
   display.setTextColor(WHITE);
@@ -233,10 +280,24 @@ void display_status(int measure) {
   char buf[20];
   snprintf(buf, sizeof(buf), "%02dcm[%02d]", int(cal_dist), measure);  
   display.println(buf);
-  display.fillRoundRect(100,0,8,15,1,WHITE);  
-  display.fillRoundRect(110,0,8,15,1,WHITE);  
-  display.fillRoundRect(120,0,8,15,1,WHITE);  
-  display.display(); 
+  switch(gRound){
+    case 1:
+      display.fillRoundRect(100,0,8,15,1,WHITE);
+      Serial.print("gRound = ");
+      Serial.println(gRound);
+      break;
+    case 2:
+      display.fillRoundRect(110,0,8,15,1,WHITE);  
+      Serial.print("gRound = ");
+      Serial.println(gRound);
+      break;
+    case 3:
+      display.fillRoundRect(120,0,8,15,1,WHITE); 
+      Serial.print("gRound = ");
+      Serial.println(gRound);      
+      break;  
+  }
+  display.display();
 }
 
 void check_btn() {
@@ -253,12 +314,18 @@ void check_btn() {
   }
   btnA_push++;
   Serial.println(btnA_push);  
-  if(btnA_push==1) {
+  if(btnA_push==1) {        
     cal_dist = calibration_dist();
+    // display.clearDisplay();
+    // display.display();
+    // display_status(0); // 호출하면 죽음
   } 
-  else if(btnA_push==2) {
-      start_sound();
-      btnA_flag = true;
+  else if(btnA_push==2) {        
+    start_sound();
+    btnA_flag = true;
+    display.clearDisplay();
+    display.display();
+    // display_status(0);
   }  
 }
 
@@ -279,7 +346,7 @@ void display_time(unsigned long startMillis) {
 }
 
 void display_round(){
-// display.clearDisplay();
+// display.clearDisplay();  
   display.fillRect(0,40,128,28,BLACK);
   display.setTextSize(3);
   display.setTextColor(WHITE);
