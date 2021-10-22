@@ -58,19 +58,10 @@ boolean car_detectOK = false;
  
 int btnA_push = 0;
 
-  // // notes in the melody:
-  // int melody[] = {NOTE_F3, NOTE_G3, NOTE_A3, NOTE_AS3};
-  // // note durations: 4 = quarter note, 8 = eighth note, etc.:
-  // int noteDurations[] = {8, 8, 8, 8};  
-
-<<<<<<< HEAD
-
 // notes in the melody:
 int melody[] = {NOTE_F3, NOTE_G3, NOTE_A3, NOTE_AS3};
 // note durations: 4 = quarter note, 8 = eighth note, etc.:
 int noteDurations[] = {8, 8, 8, 8};
-=======
->>>>>>> 5baaeee3cbef45458665b4af9ec04ef5a84a9fa0
 
 
 // 함수 선언
@@ -81,11 +72,6 @@ void start_sound(); // 스타트 버튼을 눌렀을 때 사운드 출력
 void display_status(int); // 디스플레이 상단의 상태를 보여준다. 캘리브레이션 된 거리, 현재 차량을 측정한 거리, 현재 진행중인 라운드[라운드박스]
 void display_time(unsigned long startMillis); // 경기가 시작되고 진행된 전체 시간을 보여준다.
 void display_round(); // 현재 라운드의 시간 기록을 보여줍니다. 1라운드, 2라운드, 3라운드의 각 시간을 보여준다 1R 0:00:00, 2R 0:00:00, 3R 0:00:00
-<<<<<<< HEAD
-=======
-void check_btn(); // 버튼이 눌려진 것을 체크합니다.
-void car_detect();
->>>>>>> 5baaeee3cbef45458665b4af9ec04ef5a84a9fa0
 
 void setup() {
   // put your setup code here, to run once:
@@ -126,24 +112,24 @@ void loop() {
   // long temp_dist = distance_check() + 2;
 
   display_time(millis());
-  Serial.print("car_detectOK = ");
-  Serial.print(car_detectOK);
-  Serial.print("RBG_count = ");
-  Serial.print(RBG_count);
+  Serial.print(F("car_detectOK = "));
+  Serial.print(F(car_detectOK));
+  Serial.print(F("RBG_count = "));
+  Serial.print(F(RBG_count));
   // 차량이 검출된 상태에서 RGB LED 동작
   if(car_detectOK && RBG_count < 3) {
     unsigned long currentRGBMillis = millis();
     if(currentRGBMillis-previousRGBMillis < 20 ) {
       RGB_color(255, 0, 0); // Red 
-      Serial.println("RED -------------------");
+      Serial.println(F("RED -------------------"));
     }
     else if(currentRGBMillis-previousRGBMillis < 40 ) {
       RGB_color(0, 255, 0); // Green
-      Serial.println("Green -------------------");
+      Serial.println(F("Green -------------------"));
     }
     else if(currentRGBMillis-previousRGBMillis < 60 ) {
       RGB_color(0, 0, 255); // Blue
-      Serial.println("Blue -------------------");
+      Serial.println(F("Blue -------------------"));
     }
     else {
       RGB_color(0, 0, 0); // OFF
@@ -159,10 +145,10 @@ void loop() {
   // if(cal_dist >= temp_dist) {
   //   detect_count++;
   //   if(detect_count>3){
-  //     Serial.println("Car Detected!");
+  //     Serial.println(F("Car Detected!"));
   //     char buf[20];
   //     snprintf(buf, sizeof(buf), "Distance %4d cm", int(temp_dist-2));
-  //     Serial.println(buf);
+  //     Serial.println(F(buf));
   //     delay(100);
   //     display_status(int(temp_dist-2));
   //     display_round();
@@ -202,11 +188,11 @@ void loop() {
 }
 void car_detect() {
   long temp_dist = distance_check() + 2;
-  Serial.print("temp_dist = ");
-  Serial.println(temp_dist);
+  Serial.print(F("temp_dist = "));
+  Serial.println(F(temp_dist));
   if(cal_dist >= temp_dist) {    
     detect_count++;
-    Serial.println(detect_count);
+    Serial.println(F(detect_count));
     if(detect_count>3) { // 차량 검출 확인
       car_detectOK = true;
       display_status(int(temp_dist-2));
@@ -228,8 +214,8 @@ long distance_check() {
 
   long duration = pulseIn(echoPin, HIGH);    // Echo pin: HIGH->Low 간격을 측정
   long distance = duration / 29 / 2;         // 거리(cm)로 변환 
-  Serial.print("Checked distance is ==>");
-  Serial.println(distance);
+  Serial.print(F("Checked distance is ==>"));
+  Serial.println(F(distance));
   return distance;
 }
 
@@ -237,24 +223,24 @@ long distance_check() {
 long calibration_dist() {
   currentMillis = millis();
   long dist_check = distance_check();
-  Serial.println("### Start calibration ###");
+  Serial.println(F("### Start calibration ###"));
   while(millis()-currentMillis < 4000) {
     if(dist_check == distance_check() && dist_check > 3) {
-      Serial.print("### Calibration confirm between speed checker and track distance. ==>");
-      Serial.println(dist_check);
+      Serial.print(F("### Calibration confirm between speed checker and track distance. ==>"));
+      Serial.println(F(dist_check));
       delay(1000);
     }
     else {
       currentMillis = millis();
       dist_check = distance_check();
-      Serial.print("### On calibrating... ==> ");
-      Serial.println(dist_check);
+      Serial.print(F("### On calibrating... ==> "));
+      Serial.println(F(dist_check));
       delay(1000);
     }
   }
-  Serial.print("### Calibration success ");
-  Serial.print(int(dist_check));
-  Serial.println(" cm" );
+  Serial.print(F("### Calibration success "));
+  Serial.print(F(int(dist_check)));
+  Serial.println(F(" cm" ));
   return dist_check;
 }
 
@@ -297,18 +283,18 @@ void display_status(int measure) {
   switch(gRound){
     case 1:
       display.fillRoundRect(100,0,8,15,1,WHITE);
-      Serial.print("gRound = ");
-      Serial.println(gRound);
+      Serial.print(F("gRound = "));
+      Serial.println(F(gRound));
       break;
     case 2:
       display.fillRoundRect(110,0,8,15,1,WHITE);  
-      Serial.print("gRound = ");
-      Serial.println(gRound);
+      Serial.print(F("gRound = "));
+      Serial.println(F(gRound));
       break;
     case 3:
       display.fillRoundRect(120,0,8,15,1,WHITE); 
-      Serial.print("gRound = ");
-      Serial.println(gRound);      
+      Serial.print(F("gRound = "));
+      Serial.println(F(gRound));      
       break;  
   }
   display.display();
@@ -320,14 +306,14 @@ void check_btn() {
   while(btnMillis-previousbtnMillis < 200) {
     btnMillis = millis();
     if(digitalRead(btnA)==1) {      
-      Serial.print("Button A = ");
-      Serial.println(digitalRead(btnA));
+      Serial.print(F("Button A = "));
+      Serial.println(F(digitalRead(btnA)));
     } else {
       previousbtnMillis = btnMillis;
     }
   }
   btnA_push++;
-  Serial.println(btnA_push);  
+  Serial.println(F(btnA_push));  
   if(btnA_push==1) {        
     cal_dist = calibration_dist();
     // display.clearDisplay();
