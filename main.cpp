@@ -73,6 +73,7 @@ int gRound = 3; // Default round 3
 int tover = 30; // Default time over 30 sec.
 int detect_count = 0;
 
+
 // notes in the melody:
 int melody[] = {NOTE_F3, NOTE_G3, NOTE_A3, NOTE_AS3};
 // note durations: 4 = quarter note, 8 = eighth note, etc.:
@@ -82,13 +83,13 @@ int start_melody[] = {NOTE_B5, NOTE_B5, NOTE_B5, NOTE_B6};
 int start_noteDurations[] = {2, 2, 2, 1};
 
 // 함수 선언
-long distance_check(); //측정된 거리값을 반환한다
-long calibration_dist(); //캘리브레이션 된 거리 값을 반환한다
+long distance_check(); // 현재 측정한 거리값을 반환한다
+long calibration_dist(); //캘리브레이션 측정 후, 거리 값을 반환한다
 void RGB_color(int red_light_value, int green_light_value, int blue_light_value);
-void start_sound();
-void display_status(int);
-void display_time(unsigned long startMillis);
-void display_round();
+void start_sound(); // 스타트 버튼을 눌렀을 때 사운드 출력
+void display_status(int); // 디스플레이 상단의 상태를 보여준다. 캘리브레이션 된 거리, 현재 차량을 측정한 거리, 현재 진행중인 라운드[라운드박스]
+void display_time(unsigned long startMillis); // 경기가 시작되고 진행된 전체 시간을 보여준다.
+void display_round(); // 현재 라운드의 시간 기록을 보여줍니다. 1라운드, 2라운드, 3라운드의 각 시간을 보여준다 1R 0:00:00, 2R 0:00:00, 3R 0:00:00
 
 void setup() {
   // put your setup code here, to run once:
@@ -229,6 +230,9 @@ void RGB_color(int red_light_value, int green_light_value, int blue_light_value)
   analogWrite(blue_light_pin, blue_light_value);
 }
 
+// 스타트 버튼을 누르면 진행되는 사운드 출력
+// 사운드 출력 중, 차량 검출하면 바로 게임 시작
+// 사운드 출력 완료후, 차량 검출 대기
 void start_sound() {
   unsigned long currentSndMillis = millis();
   for (int i = 0; i <4; i++) // Wen a frequency sound
