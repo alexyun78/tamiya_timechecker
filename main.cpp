@@ -113,9 +113,9 @@ void loop() {
 
   display_time(millis());
   Serial.print(F("car_detectOK = "));
-  Serial.print(F(car_detectOK));
+  Serial.print(car_detectOK);
   Serial.print(F("RBG_count = "));
-  Serial.print(F(RBG_count));
+  Serial.print(RBG_count);
   // 차량이 검출된 상태에서 RGB LED 동작
   if(car_detectOK && RBG_count < 3) {
     unsigned long currentRGBMillis = millis();
@@ -189,10 +189,10 @@ void loop() {
 void car_detect() {
   long temp_dist = distance_check() + 2;
   Serial.print(F("temp_dist = "));
-  Serial.println(F(temp_dist));
+  Serial.println(temp_dist);
   if(cal_dist >= temp_dist) {    
     detect_count++;
-    Serial.println(F(detect_count));
+    Serial.println(detect_count);
     if(detect_count>3) { // 차량 검출 확인
       car_detectOK = true;
       display_status(int(temp_dist-2));
@@ -215,7 +215,7 @@ long distance_check() {
   long duration = pulseIn(echoPin, HIGH);    // Echo pin: HIGH->Low 간격을 측정
   long distance = duration / 29 / 2;         // 거리(cm)로 변환 
   Serial.print(F("Checked distance is ==>"));
-  Serial.println(F(distance));
+  Serial.println(distance);
   return distance;
 }
 
@@ -227,19 +227,19 @@ long calibration_dist() {
   while(millis()-currentMillis < 4000) {
     if(dist_check == distance_check() && dist_check > 3) {
       Serial.print(F("### Calibration confirm between speed checker and track distance. ==>"));
-      Serial.println(F(dist_check));
+      Serial.println(dist_check);
       delay(1000);
     }
     else {
       currentMillis = millis();
       dist_check = distance_check();
       Serial.print(F("### On calibrating... ==> "));
-      Serial.println(F(dist_check));
+      Serial.println(dist_check);
       delay(1000);
     }
   }
   Serial.print(F("### Calibration success "));
-  Serial.print(F(int(dist_check)));
+  Serial.print(int(dist_check));
   Serial.println(F(" cm" ));
   return dist_check;
 }
@@ -283,18 +283,18 @@ void display_status(int measure) {
   switch(gRound){
     case 1:
       display.fillRoundRect(100,0,8,15,1,WHITE);
-      Serial.print(F("gRound = "));
-      Serial.println(F(gRound));
+      Serial.print(F("gRound = 1 = "));
+      Serial.println(gRound);
       break;
     case 2:
       display.fillRoundRect(110,0,8,15,1,WHITE);  
-      Serial.print(F("gRound = "));
-      Serial.println(F(gRound));
+      Serial.print(F("gRound = 2 = "));
+      Serial.println(gRound);
       break;
     case 3:
       display.fillRoundRect(120,0,8,15,1,WHITE); 
-      Serial.print(F("gRound = "));
-      Serial.println(F(gRound));      
+      Serial.print(F("gRound = 3 = "));
+      Serial.println(gRound);      
       break;  
   }
   display.display();
@@ -307,13 +307,13 @@ void check_btn() {
     btnMillis = millis();
     if(digitalRead(btnA)==1) {      
       Serial.print(F("Button A = "));
-      Serial.println(F(digitalRead(btnA)));
+      Serial.println(digitalRead(btnA));
     } else {
       previousbtnMillis = btnMillis;
     }
   }
   btnA_push++;
-  Serial.println(F(btnA_push));  
+  Serial.println(btnA_push);  
   if(btnA_push==1) {        
     cal_dist = calibration_dist();
     // display.clearDisplay();
