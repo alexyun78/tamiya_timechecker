@@ -1,6 +1,6 @@
 #include <Arduino.h>
-#include <SPI.h>
-#include <Wire.h>
+// #include <SPI.h>
+// #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include "pitches.h"
@@ -40,7 +40,7 @@ int blue_light_pin = 11;
 int btnA = 6;
 // int btnB = 7;
 // Buzzer
-int buzzer = 8 ;// setting controls the digital IO foot buzzer
+int buzzer = 12; //8 ;// setting controls the digital IO foot buzzer
 int RBG_count = 0;
 
 // Time variable
@@ -55,23 +55,26 @@ int gRound = 0; // Default round 3
 int detect_count = 0; // 일시적으로 차량이 검출된 것을 카운트한다.
 boolean btnA_flag = false; // button A 동작 확인
 boolean car_detectOK = false;
- 
 int btnA_push = 0;
+// int x, minX;
 
-// notes in the melody:
-int melody[] = {NOTE_F3, NOTE_G3, NOTE_A3, NOTE_AS3};
-// note durations: 4 = quarter note, 8 = eighth note, etc.:
-int noteDurations[] = {8, 8, 8, 8};
+// // notes in the melody:
+// int melody[] = {NOTE_F3, NOTE_G3, NOTE_A3, NOTE_AS3};
+// // note durations: 4 = quarter note, 8 = eighth note, etc.:
+// int noteDurations[] = {8, 8, 8, 8};
 
 
 // 함수 선언
-long distance_check(); // 현재 측정한 거리값을 반환한다
-long calibration_dist(); //캘리브레이션 측정 후, 거리 값을 반환한다
+int distance_check(); // 현재 측정한 거리값을 반환한다
+int calibration_dist(); //캘리브레이션 측정 후, 거리 값을 반환한다
 void RGB_color(int red_light_value, int green_light_value, int blue_light_value);
 void start_sound(); // 스타트 버튼을 눌렀을 때 사운드 출력
 void display_status(int); // 디스플레이 상단의 상태를 보여준다. 캘리브레이션 된 거리, 현재 차량을 측정한 거리, 현재 진행중인 라운드[라운드박스]
-void display_time(unsigned long startMillis); // 경기가 시작되고 진행된 전체 시간을 보여준다.
+String display_time(unsigned long startMillis); // 경기가 시작되고 진행된 전체 시간을 보여준다.
 void display_round(); // 현재 라운드의 시간 기록을 보여줍니다. 1라운드, 2라운드, 3라운드의 각 시간을 보여준다 1R 0:00:00, 2R 0:00:00, 3R 0:00:00
+void check_btn();
+void car_detect();
+void display_message(int, String, String);
 
 void setup() {
   // put your setup code here, to run once:
@@ -92,6 +95,7 @@ void setup() {
   delay(1000);
   RGB_color(0, 0, 255); // Blue
   delay(1000);  
+  // x = display.width();
   // Status bar display
   // display_status(0);  
   // display.clearDisplay();
@@ -106,12 +110,21 @@ void setup() {
 
 void loop() {
   while(!btnA_flag) { // A 버튼을 누르지 않았다면
+    if(btnA_push<1) { 
+      display_message(2, "Push A Btn"," To Check.");
+    }
     check_btn();
   }
   car_detect();
+  if(gRound>3) {
+    exit(0);
+  }
   // long temp_dist = distance_check() + 2;
+  
+  display_message(3,display_time(millis()),"NULL");
 
-  display_time(millis());
+
+
   Serial.print(F("car_detectOK = "));
   Serial.print(car_detectOK);
   Serial.print(F("RBG_count = "));
@@ -206,41 +219,52 @@ void car_detect() {
 
 
 // 거리를 측정해서 거리값을 반환한다
-long distance_check() {
+int distance_check() {
   // put your main code here, to run repeatedly:
   digitalWrite(trigPin, HIGH);  // 센서에 Trig 신호 입력
   delayMicroseconds(10);        // 10us 정도 유지
   digitalWrite(trigPin, LOW);   // Trig 신호 off
 
-  long duration = pulseIn(echoPin, HIGH);    // Echo pin: HIGH->Low 간격을 측정
-  long distance = duration / 29 / 2;         // 거리(cm)로 변환 
+  int duration = pulseIn(echoPin, HIGH);    // Echo pin: HIGH->Low 간격을 측정
+  int distance = duration / 29 / 2;         // 거리(cm)로 변환 
   Serial.print(F("Checked distance is ==>"));
   Serial.println(distance);
   return distance;
 }
 
 // 거리를 측정해서 값이 연속해서 3번 일치하면 캘리브레이션 완료된 것으로 적용
-long calibration_dist() {
+int calibration_dist() {
   currentMillis = millis();
-  long dist_check = distance_check();
-  Serial.println(F("### Start calibration ###"));
+  int dist_check = distance_check();
+  display_message(2, " On doing", " Measure");
+  // Serial.println(F("### Start calibration ###"));
+  int check_count =0;
   while(millis()-currentMillis < 4000) {
-    if(dist_check == distance_check() && dist_check > 3) {
-      Serial.print(F("### Calibration confirm between speed checker and track distance. ==>"));
-      Serial.println(dist_check);
+    int temp_dist = distance_check();
+    if(dist_check == temp_dist && dist_check > 3) {
+      display.setTextSize(2);
+      display.setCursor(0+check_count*30,0);
+      display.print(dist_check);
+      check_count++;
+      // Serial.print(F("### Calibration confirm between speed checker and track distance. ==>"));
+      // Serial.println(dist_check);
       delay(1000);
     }
     else {
       currentMillis = millis();
-      dist_check = distance_check();
-      Serial.print(F("### On calibrating... ==> "));
-      Serial.println(dist_check);
+      dist_check = temp_dist;
+      // Serial.print(F("### On calibrating... ==> "));
+      check_count = 0;
+      display.fillRect(0,0,128,15,BLACK);
+      // Serial.println(dist_check);
       delay(1000);
     }
+    display.display();
   }
-  Serial.print(F("### Calibration success "));
-  Serial.print(int(dist_check));
-  Serial.println(F(" cm" ));
+  // Serial.print(F("### Calibration success "));
+  // Serial.print(int(dist_check));
+  // Serial.println(F(" cm" ));
+  delay(2000);
   return dist_check;
 }
 
@@ -272,7 +296,6 @@ void start_sound() {
 
 void display_status(int measure) {
   // Status bar display
-  display.clearDisplay();
   display.fillRect(0,0,128,15,BLACK);
   display.setTextSize(2);
   display.setTextColor(WHITE);
@@ -287,11 +310,14 @@ void display_status(int measure) {
       Serial.println(gRound);
       break;
     case 2:
+      display.fillRoundRect(100,0,8,15,1,WHITE);
       display.fillRoundRect(110,0,8,15,1,WHITE);  
       Serial.print(F("gRound = 2 = "));
       Serial.println(gRound);
       break;
     case 3:
+      display.fillRoundRect(100,0,8,15,1,WHITE);
+      display.fillRoundRect(110,0,8,15,1,WHITE);      
       display.fillRoundRect(120,0,8,15,1,WHITE); 
       Serial.print(F("gRound = 3 = "));
       Serial.println(gRound);      
@@ -305,48 +331,47 @@ void check_btn() {
   unsigned long previousbtnMillis = btnMillis;
   while(btnMillis-previousbtnMillis < 200) {
     btnMillis = millis();
-    if(digitalRead(btnA)==1) {      
-      Serial.print(F("Button A = "));
-      Serial.println(digitalRead(btnA));
-    } else {
+    if(digitalRead(btnA)==0) {      
       previousbtnMillis = btnMillis;
     }
   }
   btnA_push++;
-  Serial.println(btnA_push);  
+  // Serial.println(btnA_push);  
   if(btnA_push==1) {        
     cal_dist = calibration_dist();
-    // display.clearDisplay();
-    // display.display();
-    // display_status(0); // 호출하면 죽음
-  } 
+    display_message(2,"  Measure", "Completed!");
+    display_status(0);
+    delay(4000);
+    display_message(2,"Push A Btn", " TO START!");  } 
   else if(btnA_push==2) {        
     start_sound();
     btnA_flag = true;
     display.clearDisplay();
     display.display();
-    // display_status(0);
   }  
 }
 
-void display_time(unsigned long startMillis) {
+String display_time(unsigned long startMillis) {
   unsigned long min = startMillis/60000;
   unsigned long sec = startMillis/1000%60;
   unsigned long mils = startMillis%1000;
   mils = mils/10;
   // display.clearDisplay();
-  display.fillRect(0,16,128,24,BLACK);
-  display.setTextSize(3);
-  display.setTextColor(WHITE);
-  display.setCursor(0,16);
-  char buf[20];
-  snprintf(buf, sizeof(buf), "%1d:%02d:%02d", int(min), int(sec), int(mils));  
-  display.println(buf);  
-  display.display(); 
+  // display.fillRect(0,16,128,24,BLACK);
+  // display.setTextSize(3);
+  // display.setTextColor(WHITE);
+  // display.setCursor(0,16);
+  char buf[10];
+  snprintf(buf, sizeof(buf), "%1d:%02d:%02d", int(min), int(sec), int(mils)); 
+  Serial.println(buf);
+  return buf;
+  // display.println(buf);  
+  // display.display(); 
 }
 
 void display_round(){
-// display.clearDisplay();  
+// display.clearDisplay();
+  if(gRound==1) 
   display.fillRect(0,40,128,28,BLACK);
   display.setTextSize(3);
   display.setTextColor(WHITE);
@@ -355,5 +380,21 @@ void display_round(){
   // snprintf(buf, sizeof(buf), "%02d:%02d:%02d", int(min), int(sec), int(mils));  
   // display.println(buf);  
   display.println("1St Round");
+  display.display(); 
+}
+
+void display_message(int size, String msg1, String msg2) {
+  display.setTextSize(size);
+  display.setTextColor(WHITE);
+  if(msg1 != "NULL") {
+    display.fillRect(0,16,128,24,BLACK);        
+    display.setCursor(0,16);  
+    display.print(msg1);
+  }
+  if(msg2 != "NULL") {
+    display.fillRect(0,40,128,24,BLACK);
+    display.setCursor(0,40);
+    display.print(msg2);       
+  }
   display.display(); 
 }
