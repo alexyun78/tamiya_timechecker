@@ -209,12 +209,12 @@ void car_detect(short x) {
     detect_count++;
     // Serial.println(detect_count);
     if(detect_count>x) { // 차량 검출 확인
+      gRound++;
       car_detectOK = true;
       display_status(int(temp_dist-2));
       display_round();
       RBG_count=0;
       detect_count=0;
-      gRound++;
     }
   }
   else detect_count=0;
@@ -382,16 +382,17 @@ String display_time(unsigned long startMillis) {
 
 void display_round(){
 // display.clearDisplay();
-  if(gRound==1) 
-  display.fillRect(0,40,128,28,BLACK);
-  display.setTextSize(3);
-  display.setTextColor(WHITE);
-  display.setCursor(0,40);
-  // char buf[20];
-  // snprintf(buf, sizeof(buf), "%02d:%02d:%02d", int(min), int(sec), int(mils));  
-  // display.println(buf);  
-  display.println("1St Round");
-  display.display(); 
+  if(gRound==1) {
+    display.fillRect(0,40,128,28,BLACK);
+    display.setTextSize(3);
+    display.setTextColor(WHITE);
+    display.setCursor(0,40);
+    // char buf[20];
+    // snprintf(buf, sizeof(buf), "%02d:%02d:%02d", int(min), int(sec), int(mils));  
+    // display.println(buf);  
+    display.println("1St Round");
+    display.display(); 
+  }
 }
 
 void display_message(int size, String msg1, String msg2) {
