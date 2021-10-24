@@ -40,7 +40,7 @@ int blue_light_pin = 11;
 int btnA = 6;
 // int btnB = 7;
 // Buzzer
-int buzzer = 12; //8 ;// setting controls the digital IO foot buzzer
+int buzzer = 8; //8 ;// setting controls the digital IO foot buzzer
 int RBG_count = 0;
 
 // Time variable
@@ -73,7 +73,7 @@ void display_status(int); // 디스플레이 상단의 상태를 보여준다. �
 String display_time(unsigned long startMillis); // 경기가 시작되고 진행된 전체 시간을 보여준다.
 void display_round(); // 현재 라운드의 시간 기록을 보여줍니다. 1라운드, 2라운드, 3라운드의 각 시간을 보여준다 1R 0:00:00, 2R 0:00:00, 3R 0:00:00
 void check_btn();
-void car_detect();
+void car_detect(short);
 void display_message(int, String, String);
 
 void setup() {
@@ -115,34 +115,36 @@ void loop() {
     }
     check_btn();
   }
-  car_detect();
+  Serial.print(F("gRound = "));
+  Serial.println(gRound);   
+  car_detect(3);
   if(gRound>3) {
     exit(0);
   }
   // long temp_dist = distance_check() + 2;
   
-  display_message(3,display_time(millis()),"NULL");
+  if(gRound>=1) display_message(3,display_time(millis()),"NULL");
 
 
 
-  Serial.print(F("car_detectOK = "));
-  Serial.print(car_detectOK);
-  Serial.print(F("RBG_count = "));
-  Serial.print(RBG_count);
+  // Serial.print(F("car_detectOK = "));
+  // Serial.print(car_detectOK);
+  // Serial.print(F("RBG_count = "));
+  // Serial.print(RBG_count);
   // 차량이 검출된 상태에서 RGB LED 동작
   if(car_detectOK && RBG_count < 3) {
     unsigned long currentRGBMillis = millis();
     if(currentRGBMillis-previousRGBMillis < 20 ) {
       RGB_color(255, 0, 0); // Red 
-      Serial.println(F("RED -------------------"));
+      // Serial.println(F("RED -------------------"));
     }
     else if(currentRGBMillis-previousRGBMillis < 40 ) {
       RGB_color(0, 255, 0); // Green
-      Serial.println(F("Green -------------------"));
+      // Serial.println(F("Green -------------------"));
     }
     else if(currentRGBMillis-previousRGBMillis < 60 ) {
       RGB_color(0, 0, 255); // Blue
-      Serial.println(F("Blue -------------------"));
+      // Serial.println(F("Blue -------------------"));
     }
     else {
       RGB_color(0, 0, 0); // OFF
@@ -199,14 +201,14 @@ void loop() {
   //   display_status(0); 
   // }   
 }
-void car_detect() {
+void car_detect(short x) {
   long temp_dist = distance_check() + 2;
-  Serial.print(F("temp_dist = "));
-  Serial.println(temp_dist);
+  //  Serial.print(F("temp_dist = "));
+  //  Serial.println(temp_dist);
   if(cal_dist >= temp_dist) {    
     detect_count++;
-    Serial.println(detect_count);
-    if(detect_count>3) { // 차량 검출 확인
+    // Serial.println(detect_count);
+    if(detect_count>x) { // 차량 검출 확인
       car_detectOK = true;
       display_status(int(temp_dist-2));
       display_round();
@@ -215,6 +217,7 @@ void car_detect() {
       gRound++;
     }
   }
+  else detect_count=0;
 }
 
 
@@ -227,8 +230,8 @@ int distance_check() {
 
   int duration = pulseIn(echoPin, HIGH);    // Echo pin: HIGH->Low 간격을 측정
   int distance = duration / 29 / 2;         // 거리(cm)로 변환 
-  Serial.print(F("Checked distance is ==>"));
-  Serial.println(distance);
+  // Serial.print(F("Checked distance is ==>"));
+  // Serial.println(distance);
   return distance;
 }
 
@@ -286,8 +289,16 @@ void start_sound() {
   {
     previousSndMillis = currentSndMillis;
     int noteDuration = 1000 / start_noteDurations[i];
-    tone(buzzer, start_melody[i], noteDuration);
+    tone(buzzer, start_melody[i], noteDuration);  
+    if(i==3) display_message(2," Let's GO"," START !!!");
+    else display_message(3,"   "+(String)(3-i)," Ready ");
     while (currentSndMillis - previousSndMillis <= 1000) {          
+      car_detect(4); // 출발 중
+      Serial.print(F("car_detectOK = "));
+      Serial.println(car_detectOK);       
+      Serial.print(F("gRound = "));
+      Serial.println(gRound); 
+      if(car_detectOK) return;
       currentSndMillis = millis();  
     }
     noTone(buzzer); 
@@ -300,27 +311,27 @@ void display_status(int measure) {
   display.setTextSize(2);
   display.setTextColor(WHITE);
   display.setCursor(0,0);
-  char buf[20];
+  char buf[10];
   snprintf(buf, sizeof(buf), "%02dcm[%02d]", int(cal_dist), measure);  
   display.println(buf);
   switch(gRound){
     case 1:
       display.fillRoundRect(100,0,8,15,1,WHITE);
-      Serial.print(F("gRound = 1 = "));
-      Serial.println(gRound);
+      // Serial.print(F("gRound = 1 = "));
+      // Serial.println(gRound);
       break;
     case 2:
       display.fillRoundRect(100,0,8,15,1,WHITE);
       display.fillRoundRect(110,0,8,15,1,WHITE);  
-      Serial.print(F("gRound = 2 = "));
-      Serial.println(gRound);
+      // Serial.print(F("gRound = 2 = "));
+      // Serial.println(gRound);
       break;
     case 3:
       display.fillRoundRect(100,0,8,15,1,WHITE);
       display.fillRoundRect(110,0,8,15,1,WHITE);      
       display.fillRoundRect(120,0,8,15,1,WHITE); 
-      Serial.print(F("gRound = 3 = "));
-      Serial.println(gRound);      
+      // Serial.print(F("gRound = 3 = "));
+      // Serial.println(gRound);      
       break;  
   }
   display.display();
@@ -341,13 +352,13 @@ void check_btn() {
     cal_dist = calibration_dist();
     display_message(2,"  Measure", "Completed!");
     display_status(0);
-    delay(4000);
+    delay(3000);
     display_message(2,"Push A Btn", " TO START!");  } 
   else if(btnA_push==2) {        
     start_sound();
     btnA_flag = true;
-    display.clearDisplay();
-    display.display();
+    // display.clearDisplay();
+    // display.display();
   }  
 }
 
@@ -363,7 +374,7 @@ String display_time(unsigned long startMillis) {
   // display.setCursor(0,16);
   char buf[10];
   snprintf(buf, sizeof(buf), "%1d:%02d:%02d", int(min), int(sec), int(mils)); 
-  Serial.println(buf);
+  // Serial.println(buf);
   return buf;
   // display.println(buf);  
   // display.display(); 
