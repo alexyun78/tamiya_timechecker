@@ -40,7 +40,7 @@ int blue_light_pin = 11;
 int btnA = 6;
 // int btnB = 7;
 // Buzzer
-int buzzer = 8; //8 ;// setting controls the digital IO foot buzzer
+int buzzer = 12; //8 ;// setting controls the digital IO foot buzzer
 int RBG_count = 0;
 
 // Time variable
@@ -118,7 +118,7 @@ void loop() {
   Serial.print(F("gRound = "));
   Serial.println(gRound);   
   car_detect(3);
-  if(gRound>3) {
+  if(gRound>=3) {
     exit(0);
   }
   // long temp_dist = distance_check() + 2;
