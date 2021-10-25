@@ -49,6 +49,8 @@ unsigned long soundMillis; // buzzer 관련 시간 변수
 unsigned long previousSndMillis; // buzzer 관련 이전 시간
 unsigned long btnMillis; // button 관련 시간 변수
 unsigned long previousRGBMillis = 0;
+unsigned long time_total;
+unsigned long time_round;
 
 long cal_dist = 0; // 측정기와 트랙간의 거리를 기록해서 저장
 int gRound = 0; // Default round 3
@@ -118,14 +120,36 @@ void loop() {
   Serial.print(F("gRound = "));
   Serial.println(gRound);   
   car_detect(3);
-  if(gRound>=3) {
+  if(gRound>=4) {
+    unsigned long thiredlab = millis() - time_round;
+    Serial.print("firstlab = ");
+    Serial.println(firstlab);
+    Serial.print("secondlab = ");
+    Serial.println(secondlab);
+    Serial.print("thiredlab = ");
+    Serial.println(thiredlab);        
     exit(0);
   }
   // long temp_dist = distance_check() + 2;
-  
-  if(gRound>=1) display_message(3,display_time(millis()),"NULL");
 
-
+  if(gRound == 1) {
+    if(car_detectOK) time_total = time_round = millis();
+    display_message(3,display_time(millis()-time_total),millis()-time_round);
+  }
+  else if(gRound == 2) {
+    if(car_detectOK) {
+      unsigned long firstlab = millis() - time_round;
+      time_round = millis();
+    }
+    display_message(3,display_time(millis()-time_total),millis()-time_round);
+  }
+  else if(gRound == 3) {
+    if(car_detectOK) {
+      unsigned long secondlab = millis() - time_round;
+      time_round = millis();
+    }
+    display_message(3,display_time(millis()-time_total),millis()-time_round);
+  }
 
   // Serial.print(F("car_detectOK = "));
   // Serial.print(car_detectOK);
