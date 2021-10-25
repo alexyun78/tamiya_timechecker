@@ -44,13 +44,10 @@ int buzzer = 12; //8 ;// setting controls the digital IO foot buzzer
 int RBG_count = 0;
 
 // Time variable
-unsigned long currentMillis; // millis() 경과한 시간을 밀리 초로 반환한다.
-unsigned long soundMillis; // buzzer 관련 시간 변수
-unsigned long previousSndMillis; // buzzer 관련 이전 시간
-unsigned long btnMillis; // button 관련 시간 변수
 unsigned long previousRGBMillis = 0;
 unsigned long time_total;
 unsigned long time_round;
+unsigned long firstlab, secondlab, thiredlab;
 
 long cal_dist = 0; // 측정기와 트랙간의 거리를 기록해서 저장
 int gRound = 0; // Default round 3
@@ -110,18 +107,18 @@ void setup() {
   // display.display();    
 }
 
-void loop() {
+void loop() {  
   while(!btnA_flag) { // A 버튼을 누르지 않았다면
     if(btnA_push<1) { 
       display_message(2, "Push A Btn"," To Check.");
     }
     check_btn();
   }
-  Serial.print(F("gRound = "));
-  Serial.println(gRound);   
+  // Serial.print(F("gRound = "));
+  // Serial.println(gRound);   
   car_detect(3);
   if(gRound>=4) {
-    unsigned long thiredlab = millis() - time_round;
+    thiredlab = millis() - time_round;
     Serial.print("firstlab = ");
     Serial.println(firstlab);
     Serial.print("secondlab = ");
@@ -134,21 +131,21 @@ void loop() {
 
   if(gRound == 1) {
     if(car_detectOK) time_total = time_round = millis();
-    display_message(3,display_time(millis()-time_total),millis()-time_round);
+    display_message(3,display_time(millis()-time_total),display_time(millis()-time_round));
   }
   else if(gRound == 2) {
     if(car_detectOK) {
-      unsigned long firstlab = millis() - time_round;
+      firstlab = millis() - time_round;
       time_round = millis();
     }
-    display_message(3,display_time(millis()-time_total),millis()-time_round);
+    display_message(3,display_time(millis()-time_total),display_time(millis()-time_round));
   }
   else if(gRound == 3) {
     if(car_detectOK) {
-      unsigned long secondlab = millis() - time_round;
+      secondlab = millis() - time_round;
       time_round = millis();
     }
-    display_message(3,display_time(millis()-time_total),millis()-time_round);
+    display_message(3,display_time(millis()-time_total),display_time(millis()-time_round));
   }
 
   // Serial.print(F("car_detectOK = "));
@@ -226,7 +223,7 @@ void loop() {
   // }   
 }
 void car_detect(short x) {
-  long temp_dist = distance_check() + 2;
+  int temp_dist = distance_check() + 2;
   //  Serial.print(F("temp_dist = "));
   //  Serial.println(temp_dist);
   if(cal_dist >= temp_dist) {    
@@ -235,7 +232,7 @@ void car_detect(short x) {
     if(detect_count>x) { // 차량 검출 확인
       gRound++;
       car_detectOK = true;
-      display_status(int(temp_dist-2));
+      display_status(temp_dist-2);
       display_round();
       RBG_count=0;
       detect_count=0;
@@ -261,6 +258,7 @@ int distance_check() {
 
 // 거리를 측정해서 값이 연속해서 3번 일치하면 캘리브레이션 완료된 것으로 적용
 int calibration_dist() {
+  unsigned long currentMillis; // millis() 경과한 시간을 밀리 초로 반환한다.
   currentMillis = millis();
   int dist_check = distance_check();
   display_message(2, " On doing", " Measure");
@@ -306,6 +304,7 @@ void RGB_color(int red_light_value, int green_light_value, int blue_light_value)
 // 사운드 출력 중, 차량 검출하면 바로 게임 시작
 // 사운드 출력 완료후, 차량 검출 대기
 void start_sound() {
+  unsigned long previousSndMillis; // buzzer 관련 이전 시간
   unsigned long currentSndMillis = millis();
   int start_melody[] = {NOTE_B5, NOTE_B5, NOTE_B5, NOTE_B6};
   int start_noteDurations[] = {2, 2, 2, 1};
@@ -318,10 +317,10 @@ void start_sound() {
     else display_message(3,"   "+(String)(3-i)," Ready ");
     while (currentSndMillis - previousSndMillis <= 1000) {          
       car_detect(4); // 출발 중
-      Serial.print(F("car_detectOK = "));
-      Serial.println(car_detectOK);       
-      Serial.print(F("gRound = "));
-      Serial.println(gRound); 
+      // Serial.print(F("car_detectOK = "));
+      // Serial.println(car_detectOK);       
+      // Serial.print(F("gRound = "));
+      // Serial.println(gRound); 
       if(car_detectOK) return;
       currentSndMillis = millis();  
     }
@@ -362,7 +361,7 @@ void display_status(int measure) {
 }
 
 void check_btn() {
-  btnMillis = millis();
+  unsigned long btnMillis = millis();
   unsigned long previousbtnMillis = btnMillis;
   while(btnMillis-previousbtnMillis < 200) {
     btnMillis = millis();
@@ -387,9 +386,9 @@ void check_btn() {
 }
 
 String display_time(unsigned long startMillis) {
-  unsigned long min = startMillis/60000;
-  unsigned long sec = startMillis/1000%60;
-  unsigned long mils = startMillis%1000;
+  int min = startMillis/60000;
+  int sec = startMillis/1000%60;
+  int mils = startMillis%1000;
   mils = mils/10;
   // display.clearDisplay();
   // display.fillRect(0,16,128,24,BLACK);
@@ -397,7 +396,7 @@ String display_time(unsigned long startMillis) {
   // display.setTextColor(WHITE);
   // display.setCursor(0,16);
   char buf[10];
-  snprintf(buf, sizeof(buf), "%1d:%02d:%02d", int(min), int(sec), int(mils)); 
+  snprintf(buf, sizeof(buf), "%1d:%02d:%02d", min, sec, mils); 
   // Serial.println(buf);
   return buf;
   // display.println(buf);  
