@@ -223,9 +223,9 @@ int calibration_dist() {
   while(millis()-currentMillis < 4000) {
     int temp_dist = distance_check();
     if(dist_check == temp_dist && dist_check > 3) {
-      display.setTextSize(2);
-      u8g.drawStr(0+check_count*30,0);
-      display.print(dist_check);
+      // display.setTextSize(2);
+      u8g.drawStr(check_count*30,0);
+      // display.print(dist_check);
       check_count++;
       // Serial.print(F("### Calibration confirm between speed checker and track distance. ==>"));
       // Serial.println(dist_check);
@@ -240,7 +240,7 @@ int calibration_dist() {
       // Serial.println(dist_check);
       delay(1000);
     }
-    display.display();
+    // display.display();
   }
   // Serial.print(F("### Calibration success "));
   // Serial.print(int(dist_check));
@@ -286,34 +286,35 @@ void start_sound() {
 
 void display_status(int measure) {
   // Status bar display
+  u8g.setColorIndex(0);
   u8g.drawBox(0,0,128,15,BLACK);
-  display.setTextSize(2);
-  display.setTextColor(WHITE);
+  // display.setTextSize(2);
+  // display.setTextColor(WHITE);
   u8g.drawStr(0,0);
   char buf[10];
   snprintf(buf, sizeof(buf), "%02dcm[%02d]", int(cal_dist), measure);  
-  display.println(buf);
+  // display.println(buf);
   switch(gRound){
     case 1:
-      display.fillRoundRect(100,0,8,15,1,WHITE);
+      // display.fillRoundRect(100,0,8,15,1,WHITE);
       // Serial.print(F("gRound = 1 = "));
       // Serial.println(gRound);
       break;
     case 2:
-      display.fillRoundRect(100,0,8,15,1,WHITE);
-      display.fillRoundRect(110,0,8,15,1,WHITE);  
+      // display.fillRoundRect(100,0,8,15,1,WHITE);
+      // display.fillRoundRect(110,0,8,15,1,WHITE);  
       // Serial.print(F("gRound = 2 = "));
       // Serial.println(gRound);
       break;
     case 3:
-      display.fillRoundRect(100,0,8,15,1,WHITE);
-      display.fillRoundRect(110,0,8,15,1,WHITE);      
-      display.fillRoundRect(120,0,8,15,1,WHITE); 
+      // display.fillRoundRect(100,0,8,15,1,WHITE);
+      // display.fillRoundRect(110,0,8,15,1,WHITE);      
+      // display.fillRoundRect(120,0,8,15,1,WHITE); 
       // Serial.print(F("gRound = 3 = "));
       // Serial.println(gRound);      
       break;  
   }
-  display.display();
+  // display.display();
 }
 
 void check_btn() {
