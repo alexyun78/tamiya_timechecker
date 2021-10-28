@@ -36,6 +36,7 @@ int detect_count = 0; // 일시적으로 차량이 검출된 것을 카운트한
 boolean btnA_flag = false; // button A 동작 확인
 boolean car_detectOK = false;
 int btnA_push = 0;
+int car_dist = 0;
 
 // // notes in the melody:
 // int melody[] = {NOTE_F3, NOTE_G3, NOTE_A3, NOTE_AS3};
@@ -106,7 +107,7 @@ void loop(void)
         Serial.println(thiredlab);        
         exit(0);
     }
-     // long temp_dist = distance_check() + 2;
+     // long car_detect = distance_check() + 2;
 
     if(gRound == 1) {
         if(car_detectOK) time_total = time_round = millis();
@@ -179,19 +180,20 @@ void draw(void) {
 }
 
 void car_detect(short x) {
-    int temp_dist = distance_check() + 2;
-    //  Serial.print(F("temp_dist = "));
-    //  Serial.println(temp_dist);
-    if(cal_dist >= temp_dist) {    
+     car_dist = distance_check() + 2;
+    //  Serial.print(F("car_dist = "));
+    //  Serial.println(car_dist);
+    if(cal_dist >= car_dist) {    
         detect_count++;
         // Serial.println(detect_count);
-        if(detect_count>x) { // 차량 검출 확인
-        gRound++;
-        car_detectOK = true;
-        display_status(temp_dist-2);
-        display_round();
-        RBG_count=0;
-        detect_count=0;
+        if(detect_count > x) { // 차량 검출 확인
+          gRound++;
+          car_detectOK = true;
+          car_dist = car_dist - 2;
+          // display_status(car_dist-2);
+          display_round();
+          RBG_count=0;
+          detect_count=0;
         }
     }
     else detect_count=0;
@@ -221,8 +223,8 @@ int calibration_dist() {
   // Serial.println(F("### Start calibration ###"));
   int check_count =0;
   while(millis()-currentMillis < 4000) {
-    int temp_dist = distance_check();
-    if(dist_check == temp_dist && dist_check > 3) {
+    car_dist = distance_check();
+    if(dist_check == car_dist && dist_check > 3) {
       // display.setTextSize(2);
       u8g.drawStr(check_count*30,0);
       // display.print(dist_check);
@@ -233,7 +235,7 @@ int calibration_dist() {
     }
     else {
       currentMillis = millis();
-      dist_check = temp_dist;
+      dist_check = car_dist;
       // Serial.print(F("### On calibrating... ==> "));
       check_count = 0;
       u8g.drawBox(0,0,128,15,BLACK);
