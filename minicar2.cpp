@@ -37,6 +37,8 @@ boolean btnA_flag = false; // button A 동작 확인
 boolean car_detectOK = false;
 int btnA_push = 0;
 int car_dist = 0;
+//0-None, 1-BT1, 2-BT2, 3-BT3, 4-
+short status = 0; 
 
 // // notes in the melody:
 // int melody[] = {NOTE_F3, NOTE_G3, NOTE_A3, NOTE_AS3};
@@ -89,7 +91,7 @@ void loop(void)
             ///////////////////////////////////
             u8g.firstPage();
             do {
-            display_message(2, "Push A Btn"," To Check.");
+            display_message(2, "Push A Button"," To check distance.");
             } while (u8g.nextPage());
         }
         check_btn();
@@ -190,6 +192,7 @@ void car_detect(short x) {
           gRound++;
           car_detectOK = true;
           car_dist = car_dist - 2;
+          status++;
           // display_status(car_dist-2);
           display_round();
           RBG_count=0;
@@ -384,6 +387,32 @@ void display_round(){
 }
 
 void display_message(int size, String msg1, String msg2) {
+  u8g.firstPage();
+  do {
+    switch(btnA_push) {
+      case 0:
+        u8g.setFont(u8g_font_helvB12);
+        u8g.drawBox(0,16,128,24);
+        u8g.drawStr(0, 16, "Push A Button");  
+        u8g.drawBox(0,40,128,24);
+        u8g.drawStr(0, 40, "To check distance."); 
+        break;
+      case 1:
+        cal_dist = calibration_dist();
+        u8g.firstPage();
+        do {
+        display_message(2,"  Measure", "Completed!");
+        display_status(0);
+        } while (u8g.nextPage());    
+        delay(3000);
+        do {
+        display_message(2,"Push A Btn", " TO START!");
+        } while (u8g.nextPage());    
+
+
+
+    }
+  } while (u8g.nextPage());
     if(size == 2) u8g.setFont(u8g_font_helvB12);
     else if(size == 3) u8g.setFont(u8g_font_gdb17);
     if(msg1 != "NULL") {

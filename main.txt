@@ -55,7 +55,6 @@ int detect_count = 0; // 일시적으로 차량이 검출된 것을 카운트한
 boolean btnA_flag = false; // button A 동작 확인
 boolean car_detectOK = false;
 int btnA_push = 0;
-// int x, minX;
 
 // // notes in the melody:
 // int melody[] = {NOTE_F3, NOTE_G3, NOTE_A3, NOTE_AS3};
@@ -222,6 +221,7 @@ void loop() {
   //   display_status(0); 
   // }   
 }
+
 void car_detect(short x) {
   int temp_dist = distance_check() + 2;
   //  Serial.print(F("temp_dist = "));
