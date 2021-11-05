@@ -11,6 +11,11 @@
 11. Game start 화면이나 종료된 화면에서 B 버튼 누르면 설정 화면 진입
 12. 1. Calibrate 2. Track 1~5(3), Time over 20~90(30), Best track time(기본), Best Average time 선택
 
+Line 2
+u8g.drawBox(0,16,128,24);
+
+Line 3
+u8g.drawBox(0,40,128,24);
 
 
 1. 버튼을 누르기전

@@ -59,6 +59,7 @@ void display_round(); // 현재 라운드의 시간 기록을 보여줍니다. 1
 void check_btn();
 void car_detect(short);
 void display_message();
+void display_clear() 
 // void draw(void);
 
 void setup(void)
@@ -90,11 +91,11 @@ void loop(void)
             // Display Function
             ///////////////////////////////////
             display_message();
-            u8g.firstPage();
-            do {
-            display_message();
-            } while (u8g.nextPage());
-        }
+        //     u8g.firstPage();
+        //     do {
+        //     display_message();
+        //     } while (u8g.nextPage());
+        // }
         check_btn();
      }
     // Serial.print(F("gRound = "));
@@ -335,7 +336,8 @@ void check_btn() {
   btnA_push++;
   // Serial.println(btnA_push);  
   if(btnA_push==1) {       
-        cal_dist = calibration_dist();
+        // cal_dist = calibration_dist();
+        display_clear();      
         // u8g.firstPage();
         // do {
         // // display_message(2,"  Measure", "Completed!");
@@ -394,9 +396,9 @@ void display_message() {
     switch(btnA_push) {
       case 0:
         u8g.setFont(u8g_font_helvB12);
-        u8g.drawBox(0,16,128,24);
+        // u8g.drawBox(0,16,128,24);
         u8g.drawStr(0, 16, "Push A Button");  
-        u8g.drawBox(0,40,128,24);
+        // u8g.drawBox(0,40,128,24);
         u8g.drawStr(0, 40, "To check distance."); 
         break;
       case 1:
@@ -410,9 +412,6 @@ void display_message() {
         do {
         // display_message(2,"Push A Btn", " TO START!");
         } while (u8g.nextPage());    
-
-
-
     }
   } while (u8g.nextPage());
     if(size == 2) u8g.setFont(u8g_font_helvB12);
@@ -431,4 +430,10 @@ void display_message() {
         // u8g.drawStr(0,40);
         // display.print(msg2);       
     }
+}
+
+void display_clear() {
+  u8g.firstPage();
+  do {
+  } while (u8g.nextPage());   
 }
