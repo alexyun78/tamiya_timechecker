@@ -59,11 +59,10 @@ void display_round(); // 현재 라운드의 시간 기록을 보여줍니다. 1
 void check_btn();
 void car_detect(short);
 void display_message();
-void display_clear() 
+void display_clear();
 // void draw(void);
 
-void setup(void)
-{
+void setup() {
   // put your setup code here, to run once:
   pinMode(trigPin, OUTPUT); // 센서 Trig 핀
   pinMode(echoPin, INPUT);  // 센서 Echo 핀
@@ -82,95 +81,85 @@ void setup(void)
 // u8g.setFont(u8g_font_helvB12);
 }
 
-void loop(void)
-{
-    // A 버튼을 누르지 않았다면
-    while(!btnA_flag) {
-        if(btnA_push<1) {
-            ///////////////////////////////////
-            // Display Function
-            ///////////////////////////////////
-            display_message();
-        //     u8g.firstPage();
-        //     do {
-        //     display_message();
-        //     } while (u8g.nextPage());
-        // }
-        check_btn();
-     }
-    // Serial.print(F("gRound = "));
-    // Serial.println(gRound);   
-    car_detect(3);
-    if(gRound>=4) {
-        thiredlab = millis() - time_round;
-        Serial.print("firstlab = ");
-        Serial.println(firstlab);
-        Serial.print("secondlab = ");
-        Serial.println(secondlab);
-        Serial.print("thiredlab = ");
-        Serial.println(thiredlab);        
-        exit(0);
+void loop() 
+{    
+  while(!btnA_flag) { // A 버튼을 누르지 않았다면
+      if(btnA_push<=1) { 
+        display_message();
+      }
+      check_btn();
     }
-     // long car_detect = distance_check() + 2;
+  // Serial.print(F("gRound = "));
+  // Serial.println(gRound);   
+  car_detect(3);
+  if(gRound>=4) {
+      thiredlab = millis() - time_round;
+      Serial.print("firstlab = ");
+      Serial.println(firstlab);
+      Serial.print("secondlab = ");
+      Serial.println(secondlab);
+      Serial.print("thiredlab = ");
+      Serial.println(thiredlab);        
+      exit(0);
+  }
+    // long car_detect = distance_check() + 2;
 
-    if(gRound == 1) {
-        if(car_detectOK) time_total = time_round = millis();
-        // display_message(3,display_time(millis()-time_total),display_time(millis()-time_round));
-    }
-    else if(gRound == 2) {
-        if(car_detectOK) {
-        firstlab = millis() - time_round;
-        time_round = millis();
-        }
-        // display_message(3,display_time(millis()-time_total),display_time(millis()-time_round));
-    }
-    else if(gRound == 3) {
-        if(car_detectOK) {
-        secondlab = millis() - time_round;
-        time_round = millis();
-        }
-        // display_message(3,display_time(millis()-time_total),display_time(millis()-time_round));
-    }
+  if(gRound == 1) {
+      if(car_detectOK) time_total = time_round = millis();
+      // display_message(3,display_time(millis()-time_total),display_time(millis()-time_round));
+  }
+  else if(gRound == 2) {
+      if(car_detectOK) {
+      firstlab = millis() - time_round;
+      time_round = millis();
+      }
+      // display_message(3,display_time(millis()-time_total),display_time(millis()-time_round));
+  }
+  else if(gRound == 3) {
+      if(car_detectOK) {
+      secondlab = millis() - time_round;
+      time_round = millis();
+      }
+      // display_message(3,display_time(millis()-time_total),display_time(millis()-time_round));
+  }
 
-    // Serial.print(F("car_detectOK = "));
-    // Serial.print(car_detectOK);
-    // Serial.print(F("RBG_count = "));
-    // Serial.print(RBG_count);
-    // 차량이 검출된 상태에서 RGB LED 동작
-    if(car_detectOK && RBG_count < 3) {
-        unsigned long currentRGBMillis = millis();
-        if(currentRGBMillis-previousRGBMillis < 20 ) {
-        RGB_color(255, 0, 0); // Red 
-        // Serial.println(F("RED -------------------"));
-        }
-        else if(currentRGBMillis-previousRGBMillis < 40 ) {
-        RGB_color(0, 255, 0); // Green
-        // Serial.println(F("Green -------------------"));
-        }
-        else if(currentRGBMillis-previousRGBMillis < 60 ) {
-        RGB_color(0, 0, 255); // Blue
-        // Serial.println(F("Blue -------------------"));
-        }
-        else {
-        RGB_color(0, 0, 0); // OFF
-        RBG_count++;
-        previousRGBMillis = currentRGBMillis;
-        }
-    }
-    else if(RBG_count>3) {
-        car_detectOK = false;
-    }
-
-
+  // Serial.print(F("car_detectOK = "));
+  // Serial.print(car_detectOK);
+  // Serial.print(F("RBG_count = "));
+  // Serial.print(RBG_count);
+  // 차량이 검출된 상태에서 RGB LED 동작
+  if(car_detectOK && RBG_count < 3) {
+      unsigned long currentRGBMillis = millis();
+      if(currentRGBMillis-previousRGBMillis < 20 ) {
+      RGB_color(255, 0, 0); // Red 
+      // Serial.println(F("RED -------------------"));
+      }
+      else if(currentRGBMillis-previousRGBMillis < 40 ) {
+      RGB_color(0, 255, 0); // Green
+      // Serial.println(F("Green -------------------"));
+      }
+      else if(currentRGBMillis-previousRGBMillis < 60 ) {
+      RGB_color(0, 0, 255); // Blue
+      // Serial.println(F("Blue -------------------"));
+      }
+      else {
+      RGB_color(0, 0, 0); // OFF
+      RBG_count++;
+      previousRGBMillis = currentRGBMillis;
+      }
+  }
+  else if(RBG_count>3) {
+      car_detectOK = false;
+  }
 ///////////////////////////////////
 // Display Function
 ///////////////////////////////////
-    // u8g.firstPage();
-    // do {
-    // draw();
-    // } while (u8g.nextPage());
-    // //Delay before repeating the loop.
-    // delay(50);
+  // u8g.firstPage();
+  // do {
+  // draw();
+  // } while (u8g.nextPage());
+  // //Delay before repeating the loop.
+  // delay(50);
 }
 
 // void draw(void) {
@@ -224,34 +213,43 @@ int calibration_dist() {
   unsigned long currentMillis; // millis() 경과한 시간을 밀리 초로 반환한다.
   currentMillis = millis();
   int dist_check = distance_check();
-  // display_message(2, " On doing", " Measure");
   // Serial.println(F("### Start calibration ###"));
   int check_count =0;
+  String cal_dist_sum = "";
   while(millis()-currentMillis < 4000) {
-    car_dist = distance_check();
+    car_dist = distance_check();   
     if(dist_check == car_dist && dist_check > 3) {
-      // display.setTextSize(2);
-      // u8g.drawStr(check_count*30,0);
-      // display.print(dist_check);
+      cal_dist_sum += String(dist_check) + "    ";
+      u8g.firstPage();
+      do { 
+      u8g.setFont(u8g_font_helvB12);
+      u8g.drawStr(0, 15, cal_dist_sum.c_str());
+      u8g.setFont(u8g_font_helvB10);
+      u8g.drawStr(0, 35, "Calibration");  
+      u8g.drawStr(0, 60, "In Progress...");     
+      } while(u8g.nextPage());   
       check_count++;
       // Serial.print(F("### Calibration confirm between speed checker and track distance. ==>"));
-      // Serial.println(dist_check);
+      Serial.println(dist_check);
       delay(1000);
     }
     else {
       currentMillis = millis();
       dist_check = car_dist;
-      // Serial.print(F("### On calibrating... ==> "));
       check_count = 0;
-      // u8g.drawBox(0,0,128,15);
-      // Serial.println(dist_check);
+      cal_dist_sum = "";
       delay(1000);
     }
-    // display.display();
   }
-  // Serial.print(F("### Calibration success "));
-  // Serial.print(int(dist_check));
-  // Serial.println(F(" cm" ));
+  delay(500);
+  u8g.firstPage();
+  do { 
+  u8g.setFont(u8g_font_helvB12);
+  u8g.drawStr(60, 15, String(dist_check).c_str());
+  // u8g.setFont(u8g_font_helvB10);
+  u8g.drawStr(0, 35, "Calibration");  
+  u8g.drawStr(0, 60, "Completed !!!");     
+  } while(u8g.nextPage());     
   delay(2000);
   return dist_check;
 }
@@ -334,10 +332,10 @@ void check_btn() {
     }
   }
   btnA_push++;
-  // Serial.println(btnA_push);  
+  Serial.println(btnA_push);  
   if(btnA_push==1) {       
         // cal_dist = calibration_dist();
-        display_clear();      
+        // display_clear();      
         // u8g.firstPage();
         // do {
         // // display_message(2,"  Measure", "Completed!");
@@ -387,50 +385,57 @@ void display_round(){
   }
 }
 
-void display_message() {
+void display_message() 
+{
   int size = 2;
   int msg1 = 1;
   int msg2 = 2;
-  u8g.firstPage();
-  do {
     switch(btnA_push) {
-      case 0:
-        u8g.setFont(u8g_font_helvB12);
-        // u8g.drawBox(0,16,128,24);
-        u8g.drawStr(0, 16, "Push A Button");  
-        // u8g.drawBox(0,40,128,24);
-        u8g.drawStr(0, 40, "To check distance."); 
-        break;
-      case 1:
-        cal_dist = calibration_dist();
+      case 0: // 처음 부팅 화면
+        Serial.println("btnA_push 0");
         u8g.firstPage();
         do {
-        // display_message(2,"  Measure", "Completed!");
-        display_status(0);
-        } while (u8g.nextPage());    
-        delay(3000);
-        do {
-        // display_message(2,"Push A Btn", " TO START!");
-        } while (u8g.nextPage());    
-    }
-  } while (u8g.nextPage());
-    if(size == 2) u8g.setFont(u8g_font_helvB12);
-    else if(size == 3) u8g.setFont(u8g_font_gdb17);
-    if(msg1 != 0) {
-        u8g.drawBox(0,16,128,24);
-        u8g.drawStr(0, 16, "test1");
-        // u8g.drawBox(0,16,128,24,BLACK);        
-        // u8g.drawStr(0,16);  
-        // display.print(msg1);
-    }
-    if(msg2 != 0) {
-        u8g.drawBox(0,40,128,24);
-        u8g.drawStr(0, 40, "test2");      
-        // u8g.drawBox(0,40,128,24,BLACK);
-        // u8g.drawStr(0,40);
-        // display.print(msg2);       
-    }
+          u8g.setFont(u8g_font_helvB10);
+          u8g.drawStr(0, 35, "Press The Button");  
+          u8g.drawStr(0, 60, "To Calibrate."); 
+        } while(u8g.nextPage());
+        break;
+      case 1: // 버튼 1번 눌렀을 때
+        Serial.println("btnA_push 1");
+        cal_dist = calibration_dist(); 
+        u8g.firstPage();
+        do { 
+        u8g.setFont(u8g_font_helvB12);
+        u8g.drawStr(60, 15, String(cal_dist).c_str());
+        u8g.setFont(u8g_font_helvB10);
+        u8g.drawStr(0, 35, "Press The Button"); 
+        u8g.setFont(u8g_font_helvB12); 
+        u8g.drawStr(0, 60, "To START !!!");     
+        } while(u8g.nextPage());                  
+        break;
+      case 2:
+        Serial.println("btnA_push 2");
+        if(size == 2) u8g.setFont(u8g_font_helvB12);
+        else if(size == 3) u8g.setFont(u8g_font_gdb17);
+        if(msg1 != 0) {
+            u8g.drawBox(0,16,128,24);
+            u8g.drawStr(0, 16, "test1");
+            // u8g.drawBox(0,16,128,24,BLACK);        
+            // u8g.drawStr(0,16);  
+            // display.print(msg1);
+        }
+        if(msg2 != 0) {
+            u8g.drawBox(0,40,128,24);
+            u8g.drawStr(0, 40, "test2");      
+            // u8g.drawBox(0,40,128,24,BLACK);
+            // u8g.drawStr(0,40);
+            // display.print(msg2);       
+        }
+        break;
+    } 
+  
 }
+
 
 void display_clear() {
   u8g.firstPage();

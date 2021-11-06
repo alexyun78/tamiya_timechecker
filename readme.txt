@@ -11,11 +11,16 @@
 11. Game start 화면이나 종료된 화면에서 B 버튼 누르면 설정 화면 진입
 12. 1. Calibrate 2. Track 1~5(3), Time over 20~90(30), Best track time(기본), Best Average time 선택
 
+Font 정보
+https://github.com/olikraus/u8glib/wiki/fontsize
+u8g.setFont(u8g_font_helvB10);
+u8g.setFont(u8g_font_helvB12);
+
 Line 2
-u8g.drawBox(0,16,128,24);
+u8g.drawBox(0,27,128,24);
 
 Line 3
-u8g.drawBox(0,40,128,24);
+u8g.drawBox(0,48,128,24);
 
 
 1. 버튼을 누르기전
