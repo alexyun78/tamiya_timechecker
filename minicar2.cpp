@@ -176,11 +176,18 @@ void car_detect(short x) {
      car_dist = distance_check() + 2;
     //  Serial.print(F("car_dist = "));
     //  Serial.println(car_dist);
-    if(cal_dist >= car_dist) {    
-        detect_count++;
-        // Serial.println(detect_count);
+    if(cal_dist > car_dist) {
+      Serial.print(F("cal_dist = "));
+      Serial.print(cal_dist);
+      Serial.print(F("\tcar_dist = "));
+      Serial.print(car_dist);           
+      detect_count++;
+      Serial.print(F("\tdetect_count = "));
+      Serial.println(detect_count);  
         if(detect_count > x) { // 차량 검출 확인
           gRound++;
+          Serial.print(F("gRound = "));
+          Serial.println(gRound);            
           car_detectOK = true;
           car_dist = car_dist - 2;
           status++;
@@ -274,10 +281,15 @@ void start_sound() {
     previousSndMillis = currentSndMillis;
     int noteDuration = 1000 / start_noteDurations[i];
     tone(buzzer, start_melody[i], noteDuration);  
-    // if(i==3) display_message(2," Let's GO"," START !!!");
-    // else display_message(3,"   "+(String)(3-i)," Ready ");
+    u8g.firstPage();
+    do { 
+    u8g.setFont(u8g_font_helvB12);
+    u8g.drawStr(40, 15, "READY");
+    u8g.setFont(u8g_font_helvB12);
+    u8g.drawStr(50, 60, String(3-i).c_str());    
+    } while(u8g.nextPage());    
     while (currentSndMillis - previousSndMillis <= 1000) {          
-      car_detect(4); // 출발 중
+      car_detect(8); // 출발 중
       // Serial.print(F("car_detectOK = "));
       // Serial.println(car_detectOK);       
       // Serial.print(F("gRound = "));
@@ -286,7 +298,14 @@ void start_sound() {
       currentSndMillis = millis();  
     }
     noTone(buzzer); 
-  }     
+  }
+  u8g.firstPage();
+  do { 
+  u8g.setFont(u8g_font_helvB12);
+  u8g.drawStr(0, 15, String(cal_dist).c_str());
+  u8g.drawStr(30, 35, "Let's go"); 
+  u8g.drawStr(25, 60, "START !!!");
+  } while(u8g.nextPage());        
 }
 
 void display_status(int measure) {
@@ -415,8 +434,6 @@ void display_message()
         break;
       case 2:
         Serial.println("btnA_push 2");
-        if(size == 2) u8g.setFont(u8g_font_helvB12);
-        else if(size == 3) u8g.setFont(u8g_font_gdb17);
         if(msg1 != 0) {
             u8g.drawBox(0,16,128,24);
             u8g.drawStr(0, 16, "test1");
