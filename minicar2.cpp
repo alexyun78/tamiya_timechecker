@@ -27,7 +27,7 @@ int buzzer = 12; //8 ;// setting controls the digital IO foot buzzer
 unsigned long previousRGBMillis = 0;
 unsigned long time_total;
 unsigned long time_round;
-unsigned long firstlab, secondlab, thiredlab;
+String firstlab, secondlab, thiredlab;
 
 int RBG_count = 0;
 long cal_dist = 0; // 측정기와 트랙간의 거리를 기록해서 저장
@@ -58,6 +58,7 @@ String display_time(unsigned long startMillis); // 경기가 시작되고 진행
 void display_round(); // 현재 라운드의 시간 기록을 보여줍니다. 1라운드, 2라운드, 3라운드의 각 시간을 보여준다 1R 0:00:00, 2R 0:00:00, 3R 0:00:00
 void check_btn();
 void car_detect(short);
+void car_detect2(short);
 void display_message();
 void display_clear();
 // void draw(void);
@@ -91,7 +92,7 @@ void loop()
     }
   // Serial.print(F("gRound = "));
   // Serial.println(gRound);   
-  car_detect(3);
+  car_detect2(3);
   if(gRound>=4) {
       thiredlab = millis() - time_round;
       Serial.print("firstlab = ");
@@ -105,21 +106,72 @@ void loop()
     // long car_detect = distance_check() + 2;
 
   if(gRound == 1) {
-      if(car_detectOK) time_total = time_round = millis();
+      if(car_detectOK) {
+        time_total = time_round = millis();
+        car_detectOK = false;
+      }
+      String totaltime = display_time(millis()-time_total);
+      firstlab = totaltime;
+      char buf[10];
+      char buf1[20];
+      char buf2[20];
+      snprintf(buf, sizeof(buf), "%02dcm [%02d]", int(cal_dist), int(car_dist)); 
+      snprintf(buf1, sizeof(buf1), "Total   %s", totaltime.c_str());
+      snprintf(buf2, sizeof(buf2), "1st R   %s", firstlab.c_str());
+      u8g.firstPage();
+      do { 
+      u8g.setFont(u8g_font_helvB12);
+      u8g.drawStr(0, 13, buf);      
+      u8g.drawStr(0, 35, buf1);
+      u8g.drawStr(0, 55, buf2);   
+      } while(u8g.nextPage());  
+
       // display_message(3,display_time(millis()-time_total),display_time(millis()-time_round));
   }
   else if(gRound == 2) {
+      unsigned long now_time;
       if(car_detectOK) {
-      firstlab = millis() - time_round;
-      time_round = millis();
+        now_time = millis();
+        car_detectOK = false;
       }
+      String totaltime = display_time(millis()-time_total);
+      secondlab = display_time(millis()-now_time);
+      char buf[10];
+      char buf1[20];
+      char buf2[20];
+      snprintf(buf, sizeof(buf), "%02dcm [%02d]", int(cal_dist), int(car_dist)); 
+      snprintf(buf1, sizeof(buf1), "Total   %s", totaltime.c_str());
+      snprintf(buf2, sizeof(buf2), "2nd R   %s", secondlab.c_str());
+      u8g.firstPage();
+      do { 
+      u8g.setFont(u8g_font_helvB12);
+      u8g.drawStr(0, 13, buf);      
+      u8g.drawStr(0, 35, buf1);
+      u8g.drawStr(0, 55, buf2);   
+      } while(u8g.nextPage());     
       // display_message(3,display_time(millis()-time_total),display_time(millis()-time_round));
   }
   else if(gRound == 3) {
+      unsigned long now_time;
       if(car_detectOK) {
-      secondlab = millis() - time_round;
-      time_round = millis();
+        now_time = millis();
+        car_detectOK = false;
       }
+      String totaltime = display_time(millis()-time_total);
+      thiredlab = display_time(millis()-now_time);
+      char buf[10];
+      char buf1[20];
+      char buf2[20];
+      snprintf(buf, sizeof(buf), "%02dcm [%02d]", int(cal_dist), int(car_dist)); 
+      snprintf(buf1, sizeof(buf1), "Total   %s", totaltime.c_str());
+      snprintf(buf2, sizeof(buf2), "3rd R   %s", thiredlab.c_str());
+      u8g.firstPage();
+      do { 
+      u8g.setFont(u8g_font_helvB12);
+      u8g.drawStr(0, 13, buf);      
+      u8g.drawStr(0, 35, buf1);
+      u8g.drawStr(0, 55, buf2);   
+      } while(u8g.nextPage()); 
       // display_message(3,display_time(millis()-time_total),display_time(millis()-time_round));
   }
 
@@ -192,7 +244,7 @@ void car_detect(short x) {
           car_dist = car_dist - 2;
           status++;
           // display_status(car_dist-2);
-          display_round();
+          // display_round();
           RBG_count=0;
           detect_count=0;
         }
@@ -200,6 +252,21 @@ void car_detect(short x) {
     else detect_count=0;
 }
 
+void car_detect2(short x) {
+    car_dist = distance_check() + 2;
+    if(cal_dist >= car_dist) {         
+      detect_count++;
+        if(detect_count > x) { // 차량 검출 확인
+          gRound++;       
+          car_detectOK = true;
+          car_dist = car_dist - 2;
+          status++;
+          RBG_count=0;
+          detect_count=0;
+        }
+    }
+    else detect_count=0;
+}
 
 // 거리를 측정해서 거리값을 반환한다
 int distance_check() {
@@ -233,7 +300,7 @@ int calibration_dist() {
       u8g.drawStr(0, 15, cal_dist_sum.c_str());
       u8g.setFont(u8g_font_helvB10);
       u8g.drawStr(0, 35, "Calibration");  
-      u8g.drawStr(0, 60, "In Progress...");     
+      u8g.drawStr(0, 55, "In Progress...");     
       } while(u8g.nextPage());   
       check_count++;
       // Serial.print(F("### Calibration confirm between speed checker and track distance. ==>"));
@@ -255,7 +322,7 @@ int calibration_dist() {
   u8g.drawStr(60, 15, String(dist_check).c_str());
   // u8g.setFont(u8g_font_helvB10);
   u8g.drawStr(0, 35, "Calibration");  
-  u8g.drawStr(0, 60, "Completed !!!");     
+  u8g.drawStr(0, 55, "Completed !!!");     
   } while(u8g.nextPage());     
   delay(2000);
   return dist_check;
@@ -286,7 +353,7 @@ void start_sound() {
     u8g.setFont(u8g_font_helvB12);
     u8g.drawStr(40, 15, "READY");
     u8g.setFont(u8g_font_helvB12);
-    u8g.drawStr(50, 60, String(3-i).c_str());    
+    u8g.drawStr(50, 55, String(3-i).c_str());    
     } while(u8g.nextPage());    
     while (currentSndMillis - previousSndMillis <= 1000) {          
       car_detect(8); // 출발 중
@@ -304,7 +371,7 @@ void start_sound() {
   u8g.setFont(u8g_font_helvB12);
   u8g.drawStr(0, 15, String(cal_dist).c_str());
   u8g.drawStr(30, 35, "Let's go"); 
-  u8g.drawStr(25, 60, "START !!!");
+  u8g.drawStr(25, 55, "START !!!");
   } while(u8g.nextPage());        
 }
 
@@ -370,7 +437,7 @@ void check_btn() {
       btnA_flag = true;
       // display.clearDisplay();
       // display.display();
-    }  
+    }
 }
 
 String display_time(unsigned long startMillis) {
@@ -416,7 +483,7 @@ void display_message()
         do {
           u8g.setFont(u8g_font_helvB10);
           u8g.drawStr(0, 35, "Press The Button");  
-          u8g.drawStr(0, 60, "To Calibrate."); 
+          u8g.drawStr(0, 55, "To Calibrate."); 
         } while(u8g.nextPage());
         break;
       case 1: // 버튼 1번 눌렀을 때
@@ -429,7 +496,7 @@ void display_message()
         u8g.setFont(u8g_font_helvB10);
         u8g.drawStr(0, 35, "Press The Button"); 
         u8g.setFont(u8g_font_helvB12); 
-        u8g.drawStr(0, 60, "To START !!!");     
+        u8g.drawStr(0, 55, "To START !!!");     
         } while(u8g.nextPage());                  
         break;
       case 2:
