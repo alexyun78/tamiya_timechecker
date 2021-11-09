@@ -98,7 +98,6 @@ void loop()
   // Serial.println(gRound);   
   car_detect2(3);
   if(gRound>=4) {
-      thiredlab = millis() - time_round;
       Serial.print(F("firstlab = "));
       Serial.print(firstlab);
       Serial.print(F("\tsecondlab = "));
