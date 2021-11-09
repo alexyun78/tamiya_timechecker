@@ -38,7 +38,6 @@ boolean car_detectOK = false;
 int btnA_push = 0;
 int car_dist = 0;
 //0-None, 1-BT1, 2-BT2, 3-BT3, 4-
-short status = 0; 
 
 // // notes in the melody:
 // int melody[] = {NOTE_F3, NOTE_G3, NOTE_A3, NOTE_AS3};
@@ -88,6 +87,10 @@ void loop()
       if(btnA_push<=1) { 
         display_message();
       }
+      else if(btnA_push==2) {
+        start_sound();
+        btnA_flag = true;
+      }
       check_btn();
     }
   // Serial.print(F("gRound = "));
@@ -125,8 +128,6 @@ void loop()
       u8g.drawStr(0, 35, buf1);
       u8g.drawStr(0, 55, buf2);   
       } while(u8g.nextPage());  
-
-      // display_message(3,display_time(millis()-time_total),display_time(millis()-time_round));
   }
   else if(gRound == 2) {
       unsigned long now_time;
@@ -149,7 +150,6 @@ void loop()
       u8g.drawStr(0, 35, buf1);
       u8g.drawStr(0, 55, buf2);   
       } while(u8g.nextPage());     
-      // display_message(3,display_time(millis()-time_total),display_time(millis()-time_round));
   }
   else if(gRound == 3) {
       unsigned long now_time;
@@ -172,7 +172,6 @@ void loop()
       u8g.drawStr(0, 35, buf1);
       u8g.drawStr(0, 55, buf2);   
       } while(u8g.nextPage()); 
-      // display_message(3,display_time(millis()-time_total),display_time(millis()-time_round));
   }
 
   // Serial.print(F("car_detectOK = "));
@@ -237,12 +236,10 @@ void car_detect(short x) {
       Serial.print(F("\tdetect_count = "));
       Serial.println(detect_count);  
         if(detect_count > x) { // 차량 검출 확인
-          gRound++;
           Serial.print(F("gRound = "));
           Serial.println(gRound);            
           car_detectOK = true;
           car_dist = car_dist - 2;
-          status++;
           // display_status(car_dist-2);
           // display_round();
           RBG_count=0;
@@ -260,7 +257,6 @@ void car_detect2(short x) {
           gRound++;       
           car_detectOK = true;
           car_dist = car_dist - 2;
-          status++;
           RBG_count=0;
           detect_count=0;
         }
@@ -361,7 +357,10 @@ void start_sound() {
       // Serial.println(car_detectOK);       
       // Serial.print(F("gRound = "));
       // Serial.println(gRound); 
-      if(car_detectOK) return;
+      if(car_detectOK) {
+        gRound++;
+        return;
+      }
       currentSndMillis = millis();  
     }
     noTone(buzzer); 
@@ -418,26 +417,15 @@ void check_btn() {
     }
   }
   btnA_push++;
-  Serial.println(btnA_push);  
-  if(btnA_push==1) {       
-        // cal_dist = calibration_dist();
-        // display_clear();      
-        // u8g.firstPage();
-        // do {
-        // // display_message(2,"  Measure", "Completed!");
-        // display_status(0);
-        // } while (u8g.nextPage());    
-        // delay(3000);
-        // do {
-        // // display_message(2,"Push A Btn", " TO START!");
-        // } while (u8g.nextPage());    
-    } 
-  else if(btnA_push==2) {
-      start_sound();
-      btnA_flag = true;
-      // display.clearDisplay();
-      // display.display();
-    }
+  // Serial.println(btnA_push);  
+  // if(btnA_push==1) {       
+  //   } 
+  // else if(btnA_push==2) {
+  //     start_sound();
+  //     btnA_flag = true;
+  //     // display.clearDisplay();
+  //     // display.display();
+  //   }
 }
 
 String display_time(unsigned long startMillis) {
@@ -473,9 +461,6 @@ void display_round(){
 
 void display_message() 
 {
-  int size = 2;
-  int msg1 = 1;
-  int msg2 = 2;
     switch(btnA_push) {
       case 0: // 처음 부팅 화면
         Serial.println("btnA_push 0");
@@ -499,25 +484,7 @@ void display_message()
         u8g.drawStr(0, 55, "To START !!!");     
         } while(u8g.nextPage());                  
         break;
-      case 2:
-        Serial.println("btnA_push 2");
-        if(msg1 != 0) {
-            u8g.drawBox(0,16,128,24);
-            u8g.drawStr(0, 16, "test1");
-            // u8g.drawBox(0,16,128,24,BLACK);        
-            // u8g.drawStr(0,16);  
-            // display.print(msg1);
-        }
-        if(msg2 != 0) {
-            u8g.drawBox(0,40,128,24);
-            u8g.drawStr(0, 40, "test2");      
-            // u8g.drawBox(0,40,128,24,BLACK);
-            // u8g.drawStr(0,40);
-            // display.print(msg2);       
-        }
-        break;
     } 
-  
 }
 
 
