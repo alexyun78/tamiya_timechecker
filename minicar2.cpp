@@ -37,6 +37,7 @@ boolean btnA_flag = false; // button A 동작 확인
 boolean car_detectOK = false;
 int btnA_push = 0;
 int car_dist = 0;
+int car_dist_show = 0;
 //0-None, 1-BT1, 2-BT2, 3-BT3, 4-
 
 // // notes in the melody:
@@ -86,24 +87,25 @@ void loop()
   while(!btnA_flag) { // A 버튼을 누르지 않았다면
       if(btnA_push<=1) { 
         display_message();
+        check_btn();
       }
       else if(btnA_push==2) {
         start_sound();
         btnA_flag = true;
       }
-      check_btn();
     }
   // Serial.print(F("gRound = "));
   // Serial.println(gRound);   
   car_detect2(3);
   if(gRound>=4) {
       thiredlab = millis() - time_round;
-      Serial.print("firstlab = ");
-      Serial.println(firstlab);
-      Serial.print("secondlab = ");
-      Serial.println(secondlab);
-      Serial.print("thiredlab = ");
-      Serial.println(thiredlab);        
+      Serial.print(F("firstlab = "));
+      Serial.print(firstlab);
+      Serial.print(F("\tsecondlab = "));
+      Serial.print(secondlab);
+      Serial.print(F("\tthiredlab = "));
+      Serial.println(thiredlab);            
+      delay(10);
       exit(0);
   }
     // long car_detect = distance_check() + 2;
@@ -118,7 +120,7 @@ void loop()
       char buf[10];
       char buf1[20];
       char buf2[20];
-      snprintf(buf, sizeof(buf), "%02dcm [%02d]", int(cal_dist), int(car_dist)); 
+      snprintf(buf, sizeof(buf), "%02dcm [%02d]", int(cal_dist), int(car_dist_show)); 
       snprintf(buf1, sizeof(buf1), "Total   %s", totaltime.c_str());
       snprintf(buf2, sizeof(buf2), "1st R   %s", firstlab.c_str());
       u8g.firstPage();
@@ -140,7 +142,7 @@ void loop()
       char buf[10];
       char buf1[20];
       char buf2[20];
-      snprintf(buf, sizeof(buf), "%02dcm [%02d]", int(cal_dist), int(car_dist)); 
+      snprintf(buf, sizeof(buf), "%02dcm [%02d]", int(cal_dist), int(car_dist_show)); 
       snprintf(buf1, sizeof(buf1), "Total   %s", totaltime.c_str());
       snprintf(buf2, sizeof(buf2), "2nd R   %s", secondlab.c_str());
       u8g.firstPage();
@@ -162,7 +164,7 @@ void loop()
       char buf[10];
       char buf1[20];
       char buf2[20];
-      snprintf(buf, sizeof(buf), "%02dcm [%02d]", int(cal_dist), int(car_dist)); 
+      snprintf(buf, sizeof(buf), "%02dcm [%02d]", int(cal_dist), int(car_dist_show)); 
       snprintf(buf1, sizeof(buf1), "Total   %s", totaltime.c_str());
       snprintf(buf2, sizeof(buf2), "3rd R   %s", thiredlab.c_str());
       u8g.firstPage();
@@ -239,7 +241,7 @@ void car_detect(short x) {
           Serial.print(F("gRound = "));
           Serial.println(gRound);            
           car_detectOK = true;
-          car_dist = car_dist - 2;
+          car_dist_show = car_dist - 2;
           // display_status(car_dist-2);
           // display_round();
           RBG_count=0;
@@ -251,12 +253,18 @@ void car_detect(short x) {
 
 void car_detect2(short x) {
     car_dist = distance_check() + 2;
+    Serial.print(F("cal_dist = "));
+    Serial.print(cal_dist);
+    Serial.print(F("\tcar_dist = "));
+    Serial.print(car_dist);      
+    Serial.print(F("\tdetect_count = "));
+    Serial.println(detect_count);      
     if(cal_dist >= car_dist) {         
       detect_count++;
         if(detect_count > x) { // 차량 검출 확인
           gRound++;       
           car_detectOK = true;
-          car_dist = car_dist - 2;
+          car_dist_show = car_dist - 2;
           RBG_count=0;
           detect_count=0;
         }
