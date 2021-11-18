@@ -19,19 +19,18 @@ int blue_light_pin = 11;
 int btnA = 6;
 int btnB = 7;
 // Buzzer
-int buzzer = 12; //8 ;// setting controls the digital IO foot buzzer
+int buzzer = 8; //8 ;// setting controls the digital IO foot buzzer
 
 ///////////////////////////////////
 // Variable Sstup
 ///////////////////////////////////
-unsigned long previousRGBMillis = 0;
 unsigned long time_total;
 unsigned long round_interval = 0;
+unsigned long now_time;
 String firstlab;
 String secondlab;
 String thirdlab;
 
-int RBG_count = 0;
 long cal_dist = 0; // 측정기와 트랙간의 거리를 기록해서 저장
 int gRound = 0; // Default round 3
 int detect_count = 0; // 일시적으로 차량이 검출된 것을 카운트한다.
@@ -53,10 +52,9 @@ int car_dist_show = 0;
 ///////////////////////////////////
 int distance_check(); // 현재 측정한 거리값을 반환한다
 int calibration_dist(); //캘리브레이션 측정 후, 거리 값을 반환한다
-void RGB_color(int red_light_value, int green_light_value, int blue_light_value);
+void RGB_color(int, int, int);
 void start_sound(); // 스타트 버튼을 눌렀을 때 사운드 출력
-void display_status(int); // 디스플레이 상단의 상태를 보여준다. 캘리브레이션 된 거리, 현재 차량을 측정한 거리, 현재 진행중인 라운드[라운드박스]
-String display_time(unsigned long startMillis); // 경기가 시작되고 진행된 전체 시간을 보여준다.
+String display_time(unsigned long); // 경기가 시작되고 진행된 전체 시간을 보여준다.
 void display_round(); // 현재 라운드의 시간 기록을 보여줍니다. 1라운드, 2라운드, 3라운드의 각 시간을 보여준다 1R 0:00:00, 2R 0:00:00, 3R 0:00:00
 void check_btn();
 void car_detect(short);
@@ -78,7 +76,8 @@ void setup() {
   RGB_color(0, 255, 0); // Green
   delay(500);
   RGB_color(0, 0, 255); // Blue
-  delay(500);  
+  delay(500);
+  RGB_color(0, 0, 0); // OFF
   Serial.begin(115200);    
 //Set font.
 // u8g.setFont(u8g_font_helvB12);
@@ -96,27 +95,31 @@ void loop()
         btnA_flag = true;
       }
     }
-  // Serial.print(F("gRound = "));
-  // Serial.println(gRound);   
   if(round_interval == 0) {
     car_detect2(3);
   }
   if(gRound>=4) {
-    Serial.print(F("firstlab = "));
-    Serial.print(firstlab);
-    Serial.print(F("\tsecondlab = "));
-    Serial.print(secondlab);
-    Serial.print(F("\tthirdlab = "));
-    Serial.println(thirdlab);
-    firstlab = "1St    " + firstlab;
-    secondlab = "2nd    " + secondlab;
-    thirdlab = "3rd    " + thirdlab;
+    char buf[20]; 
+    char buf1[20]; 
+    char buf2[20]; 
+    // Serial.print(F("firstlab = "));
+    // Serial.print(firstlab);
+    // Serial.print(F("\tsecondlab = "));
+    // Serial.print(secondlab);
+    // Serial.print(F("\tthirdlab = "));
+    // Serial.println(thirdlab);
+    snprintf(buf, sizeof(buf), "1St ==> %s", firstlab.c_str());
+    snprintf(buf1, sizeof(buf1), "2nd ==> %s", secondlab.c_str()); 
+    snprintf(buf2, sizeof(buf2), "3rd ==> %s", thirdlab.c_str()); 
+    // firstlab = "1St    " + firstlab;
+    // secondlab = "2nd    " + secondlab;
+    // thirdlab = "3rd    " + thirdlab;
     u8g.firstPage();
     do {
     u8g.setFont(u8g_font_helvB12);
-    u8g.drawStr(0, 13, firstlab.c_str());      
-    u8g.drawStr(0, 35, secondlab.c_str());
-    u8g.drawStr(0, 55, thirdlab.c_str());   
+    u8g.drawStr(0, 13, buf);      
+    u8g.drawStr(0, 35, buf1);
+    u8g.drawStr(0, 55, buf2);   
     } while(u8g.nextPage());                
     delay(15);
     check_btnB();
@@ -126,11 +129,19 @@ void loop()
       time_total = millis();
       car_detectOK = false;
     }
-    String totaltime = display_time(millis()-time_total);
+    // Serial.print(F("cal_dist = "));
+    // Serial.print(cal_dist);
+    // Serial.print(F("\tcar_dist = "));
+    // Serial.print(car_dist);      
+    // Serial.print(F("\tdetect_count = "));
+    // Serial.print(detect_count);
+    // Serial.print(F("\tgRound = "));
+    // Serial.println(gRound);    
+    unsigned long tmp_time = millis(); 
+    String totaltime = display_time(tmp_time - time_total);
     firstlab = totaltime;
     char buf[20]; 
-    if(((millis()-time_total) < round_interval) && round_interval) {
-      Serial.println("===========================> gRound == 1");
+    if(((tmp_time - time_total) < round_interval) && round_interval) {
       char buf1[20];
       char buf2[20];
       snprintf(buf, sizeof(buf), "H:%02d Now:%02dcm", int(cal_dist), int(car_dist_show)); 
@@ -156,16 +167,24 @@ void loop()
       }
   }
   else if(gRound == 2) {
-    unsigned long now_time;
+    // unsigned long now_time;
+    unsigned long cal_time=0;
     if(car_detectOK) {
       now_time = millis();
       car_detectOK = false;
     }
-    secondlab = display_time(millis()-now_time);
-    String totaltime = display_time(millis()-time_total);
+    unsigned long tmp_time = millis();       
+    String totaltime = display_time((tmp_time - time_total));
+    // Serial.print("tmp_time  ");
+    // Serial.println(tmp_time);
+    // Serial.print("time_total  ");
+    // Serial.print(time_total);
+    Serial.print("now_time  ");
+    Serial.println(now_time);
+    cal_time = tmp_time - now_time;
+    secondlab = display_time(cal_time);
     char buf[20];
-    if(((millis()-now_time) < round_interval) && round_interval) {
-      Serial.println("===========================> gRound == 2");
+    if(((tmp_time - now_time) < round_interval) && round_interval) {
       char buf1[20];
       char buf2[20];
       snprintf(buf, sizeof(buf), "H:%02d Now:%02dcm", int(cal_dist), int(car_dist_show));
@@ -191,16 +210,20 @@ void loop()
       }
   }
   else if(gRound == 3) {
-    unsigned long now_time;
+    // unsigned long now_time;
+    unsigned long cal_time=0;
     if(car_detectOK) {
       now_time = millis();
       car_detectOK = false;
     }
+    unsigned long tmp_time = millis();        
+    String totaltime = display_time((tmp_time - time_total));  
+    Serial.print("now_time  ");
+    Serial.println(now_time);    
+    cal_time = tmp_time - now_time;  
+    thirdlab = display_time(cal_time);
     char buf[20];
-    thirdlab = display_time(millis()-now_time);
-    String totaltime = display_time(millis()-time_total);    
-    if(((millis()-now_time) < round_interval) && round_interval) {
-      Serial.println("===========================> gRound == 3");
+    if(((tmp_time - now_time) < round_interval) && round_interval) {
       char buf1[20];
       char buf2[20];
       snprintf(buf, sizeof(buf), "H:%02d Now:%02dcm", int(cal_dist), int(car_dist_show));
@@ -225,104 +248,64 @@ void loop()
       round_interval = 0; 
       }
   }
-
-  // Serial.print(F("car_detectOK = "));
-  // Serial.print(car_detectOK);
-  // Serial.print(F("RBG_count = "));
-  // Serial.print(RBG_count);
-  // 차량이 검출된 상태에서 RGB LED 동작
-  if(car_detectOK && RBG_count < 3) {
-      unsigned long currentRGBMillis = millis();
-      if(currentRGBMillis-previousRGBMillis < 20 ) {
-      RGB_color(255, 0, 0); // Red 
-      // Serial.println(F("RED -------------------"));
-      }
-      else if(currentRGBMillis-previousRGBMillis < 40 ) {
-      RGB_color(0, 255, 0); // Green
-      // Serial.println(F("Green -------------------"));
-      }
-      else if(currentRGBMillis-previousRGBMillis < 60 ) {
-      RGB_color(0, 0, 255); // Blue
-      // Serial.println(F("Blue -------------------"));
-      }
-      else {
-      RGB_color(0, 0, 0); // OFF
-      RBG_count++;
-      previousRGBMillis = currentRGBMillis;
-      }
-  }
-  else if(RBG_count>3) {
-      car_detectOK = false;
-  }
-///////////////////////////////////
-// Display Function
-///////////////////////////////////
-  // u8g.firstPage();
-  // do {
-  // draw();
-  // } while (u8g.nextPage());
-  // //Delay before repeating the loop.
-  // delay(50);
 }
-
-// void draw(void) {
-//     //Write text. (x, y, text)
-//     u8g.setFont(u8g_font_helvB12);
-//     u8g.drawStr(20, 20, "Hello World.");
-//     u8g.drawBox(10,12,20,30);
-//     u8g.drawRBox(100,0,8,15,1);
-//     u8g.setFont(u8g_font_gdb17);
-//     u8g.drawStr(20, 50, "Hello World.");
-// }
 
 void car_detect(short x) {
-     car_dist = distance_check() + 2;
-    //  Serial.print(F("car_dist = "));
-    //  Serial.println(car_dist);
-    if(cal_dist > car_dist) {
-      Serial.print(F("cal_dist = "));
-      Serial.print(cal_dist);
-      Serial.print(F("\tcar_dist = "));
-      Serial.print(car_dist);           
-      detect_count++;
-      Serial.print(F("\tdetect_count = "));
-      Serial.println(detect_count);  
-        if(detect_count > x) { // 차량 검출 확인
-          Serial.print(F("gRound = "));
-          Serial.println(gRound);            
-          car_detectOK = true;
-          car_dist_show = car_dist - 2;
-          // display_status(car_dist-2);
-          // display_round();
-          RBG_count=0;
-          detect_count=0;
-        }
+  car_dist = distance_check() + 2;
+  Serial.print(F("cal_dist = "));
+  Serial.print(cal_dist);  
+  Serial.print(F("\tcar_dist = "));
+  Serial.println(car_dist);
+  if(cal_dist > car_dist) {
+    // Serial.print(F("cal_dist = "));
+    // Serial.print(cal_dist);
+    // Serial.print(F("\tcar_dist = "));
+    // Serial.print(car_dist);           
+    // detect_count++;
+    // Serial.print(F("\tdetect_count = "));
+    // Serial.println(detect_count);  
+    if(detect_count > x) { // 차량 검출 확인
+      // Serial.print(F("======================== Car Detected 1111111 "));           
+      car_detectOK = true;
+      car_dist_show = car_dist - 2;
+      detect_count=0;
     }
-    else detect_count=0;
+  }
+  else detect_count=0;
 }
 
-void car_detect2(short x) {
-    car_dist = distance_check() + 2;
-    Serial.print(F("cal_dist = "));
-    Serial.print(cal_dist);
-    Serial.print(F("\tcar_dist = "));
-    Serial.print(car_dist);      
-    Serial.print(F("\tdetect_count = "));
-    Serial.print(detect_count);
-    Serial.print(F("\tgRound = "));
-    Serial.println(gRound);    
-    if(cal_dist >= car_dist) {   
-      detect_count++;
-        if(detect_count > x) { // 차량 검출 확인
-          gRound++;       
-          car_detectOK = true;
-          car_dist_show = car_dist - 2;
-          RBG_count=0;
-          detect_count=0;
-          round_interval = 5000;
-        }
+void car_detect2(short x) {  
+  car_dist = distance_check() + 2;
+  // Serial.print(F("cal_dist = "));
+  // Serial.print(cal_dist);
+  // Serial.print(F("\tcar_dist = "));
+  // Serial.print(car_dist);      
+  // Serial.print(F("\tdetect_count = "));
+  // Serial.print(detect_count);
+  // Serial.print(F("\tgRound = "));
+  // Serial.print(gRound);
+  Serial.print(F("\tfirstlab = "));
+  Serial.print(firstlab);
+  Serial.print(F("\tsecondlab = "));
+  Serial.print(secondlab);
+  Serial.print(F("\tthirdlab = "));
+  Serial.println(thirdlab);           
+  if(cal_dist > car_dist) {
+    detect_count++;
+    // Serial.println(F("======================== Car Detected 2 ")); 
+    if(detect_count > x) { // 차량 검출 확인
+      // Serial.println(F("======================== Car Detected 222222222 "));  
+      gRound++;       
+      car_detectOK = true;
+      car_dist_show = car_dist - 2;
+      detect_count=0;
+      round_interval = 5000;
+      if(gRound==1) RGB_color(0, 0, 255); // Blue
+      else if(gRound==2) RGB_color(0, 255, 0); // Green
+      else RGB_color(255, 0, 0); // Red 
     }
-    else detect_count=0;
+  }
+  else detect_count=0;
 }
 
 // 거리를 측정해서 거리값을 반환한다
@@ -334,8 +317,6 @@ int distance_check() {
 
   int duration = pulseIn(echoPin, HIGH);    // Echo pin: HIGH->Low 간격을 측정
   int distance = duration / 29 / 2;         // 거리(cm)로 변환 
-  // Serial.print(F("Checked distance is ==>"));
-  // Serial.println(distance);
   return distance;
 }
 
@@ -344,7 +325,6 @@ int calibration_dist() {
   unsigned long currentMillis; // millis() 경과한 시간을 밀리 초로 반환한다.
   currentMillis = millis();
   int dist_check = distance_check();
-  // Serial.println(F("### Start calibration ###"));
   int check_count =0;
   String cal_dist_sum = "";
   while(millis()-currentMillis < 4000) {
@@ -360,8 +340,7 @@ int calibration_dist() {
       u8g.drawStr(0, 55, "In Progress...");     
       } while(u8g.nextPage());   
       check_count++;
-      // Serial.print(F("### Calibration confirm between speed checker and track distance. ==>"));
-      Serial.println(dist_check);
+      // Serial.println(dist_check);
       delay(1000);
     }
     else {
@@ -405,9 +384,7 @@ void start_sound() {
   int start_noteDurations[] = {2, 2, 2, 1};
   for (int i = 0; i <4; i++) // Wen a frequency sound
   {
-    previousSndMillis = currentSndMillis;
-    int noteDuration = 1000 / start_noteDurations[i];
-    tone(buzzer, start_melody[i], noteDuration);  
+    previousSndMillis = currentSndMillis; 
     u8g.firstPage();
     do { 
     u8g.setFont(u8g_font_helvB12);
@@ -415,12 +392,16 @@ void start_sound() {
     u8g.setFont(u8g_font_helvB12);
     u8g.drawStr(50, 55, String(3-i).c_str());    
     } while(u8g.nextPage());    
-    while (currentSndMillis - previousSndMillis <= 1000) {          
+    int noteDuration = 1000 / start_noteDurations[i];
+    tone(buzzer, start_melody[i], noteDuration);      
+    while (currentSndMillis - previousSndMillis <= 1000) {               
       car_detect(3); // 출발 중
-      // Serial.print(F("car_detectOK = "));
-      // Serial.println(car_detectOK);       
-      // Serial.print(F("gRound = "));
-      // Serial.println(gRound); 
+      // Serial.print(F("===========> cal_dist = "));
+      // Serial.print(cal_dist);  
+      // Serial.print(F("\tcar_dist = "));
+      // Serial.print(car_dist);       
+      // Serial.print(F("\tdetect_count = "));
+      // Serial.println(detect_count);        
       if(car_detectOK) {
         gRound++;
         round_interval = 5000;
@@ -431,48 +412,15 @@ void start_sound() {
     noTone(buzzer); 
   }
   char buf[20];
-  snprintf(buf, sizeof(buf), "Height:  %02d cm", int(cal_dist));
+  snprintf(buf, sizeof(buf), "Height:  %02d cm", int(cal_dist));  
   u8g.firstPage();
   do { 
   u8g.setFont(u8g_font_helvB12);
   u8g.drawStr(5, 12, buf);
-  // u8g.drawStr(0, 15, String(cal_dist).c_str());
   u8g.drawStr(30, 35, "Let's go"); 
   u8g.drawStr(25, 55, "START !!!");
-  } while(u8g.nextPage());        
-}
-
-void display_status(int measure) {
-  // Status bar display
-  // u8g.setColorIndex(0);
-  // u8g.drawBox(0,0,128,15);
-  // display.setTextSize(2);
-  // display.setTextColor(WHITE);
-  // u8g.drawStr(0,0);
-  char buf[10];
-  snprintf(buf, sizeof(buf), "%02dcm[%02d]", int(cal_dist), measure);  
-  // display.println(buf);
-  switch(gRound){
-    case 1:
-      // display.fillRoundRect(100,0,8,15,1,WHITE);
-      // Serial.print(F("gRound = 1 = "));
-      // Serial.println(gRound);
-      break;
-    case 2:
-      // display.fillRoundRect(100,0,8,15,1,WHITE);
-      // display.fillRoundRect(110,0,8,15,1,WHITE);  
-      // Serial.print(F("gRound = 2 = "));
-      // Serial.println(gRound);
-      break;
-    case 3:
-      // display.fillRoundRect(100,0,8,15,1,WHITE);
-      // display.fillRoundRect(110,0,8,15,1,WHITE);      
-      // display.fillRoundRect(120,0,8,15,1,WHITE); 
-      // Serial.print(F("gRound = 3 = "));
-      // Serial.println(gRound);      
-      break;  
-  }
-  // display.display();
+  } while(u8g.nextPage());
+  Serial.println(F("===========> START !!!!!!!!!!!!!!!!!! "));
 }
 
 void check_btn() {
@@ -502,47 +450,25 @@ void check_btnB() {
   btnA_flag = false;
   car_dist = 0;
   car_detectOK = false;
-  round_interval = 0;
-  
-  
+  round_interval = 0;  
 }
 
 String display_time(unsigned long startMillis) {
-  int min = startMillis/60000;
-  int sec = startMillis/1000%60;
-  int mils = startMillis%1000;
-  mils = mils/10;
-  // display.clearDisplay();
-  // u8g.drawBox(0,16,128,24,BLACK);
-  // display.setTextSize(3);
-  // display.setTextColor(WHITE);
-  // u8g.drawStr(0,16);
-  char buf[10];
-  snprintf(buf, sizeof(buf), "%1d:%02d:%02d", min, sec, mils); 
-  // Serial.println(buf);
-  return buf;
-  // display.println(buf);  
-  // display.display(); 
-}
-
-void display_round(){
-// display.clearDisplay();
-  if(gRound==1) {
-    // u8g.drawBox(0,40,128,28);
-    // u8g.drawStr(0,40);
-    // char buf[20];
-    // snprintf(buf, sizeof(buf), "%02d:%02d:%02d", int(min), int(sec), int(mils));  
-    // display.println(buf);  
-    // display.println("1St Round");
-    // display.display(); 
-  }
+  Serial.print("startMillis \t");
+  Serial.println(startMillis);
+  unsigned int min = startMillis/60000;
+  unsigned int sec = (startMillis/1000)%60;
+  unsigned int mils = (startMillis%1000)/10;
+  // mils = mils/10;
+  char buf5[20];
+  snprintf(buf5, sizeof(buf5), "%1d:%02d:%02d", min, sec, mils); 
+  return buf5;
 }
 
 void display_message() 
 {
     switch(btnA_push) {
       case 0: // 처음 부팅 화면
-        Serial.println("btnA_push 0");
         u8g.firstPage();
         do {
           u8g.setFont(u8g_font_helvB10);
@@ -552,7 +478,6 @@ void display_message()
         break;
       case 1: // 버튼 1번 눌렀을 때
         char buf[20];
-        Serial.println("btnA_push 1");
         cal_dist = calibration_dist(); 
         snprintf(buf, sizeof(buf), "Height:  %02d cm", int(cal_dist));
         u8g.firstPage();
