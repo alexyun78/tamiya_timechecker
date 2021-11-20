@@ -27,6 +27,7 @@ int buzzer = 8; //8 ;// setting controls the digital IO foot buzzer
 unsigned long time_total;
 unsigned long round_interval = 0;
 unsigned long now_time;
+unsigned long best_record = 100000;
 String firstlab;
 String secondlab;
 String thirdlab;
@@ -61,7 +62,7 @@ void car_detect(short);
 void car_detect2(short);
 void display_message();
 void check_btnB();
-// void draw(void);
+void Split(String);
 
 void setup() {
   // put your setup code here, to run once:
@@ -96,12 +97,13 @@ void loop()
       }
     }
   if(round_interval == 0) {
-    car_detect2(3);
+    car_detect2(1);
   }
   if(gRound>=4) {
     char buf[20]; 
     char buf1[20]; 
-    char buf2[20]; 
+    char buf2[20];
+    char buf3[20];
     // Serial.print(F("firstlab = "));
     // Serial.print(firstlab);
     // Serial.print(F("\tsecondlab = "));
@@ -111,15 +113,17 @@ void loop()
     snprintf(buf, sizeof(buf), "1St ==> %s", firstlab.c_str());
     snprintf(buf1, sizeof(buf1), "2nd ==> %s", secondlab.c_str()); 
     snprintf(buf2, sizeof(buf2), "3rd ==> %s", thirdlab.c_str()); 
-    // firstlab = "1St    " + firstlab;
-    // secondlab = "2nd    " + secondlab;
-    // thirdlab = "3rd    " + thirdlab;
+    Split(firstlab);
+    Split(secondlab);
+    Split(thirdlab);
+    snprintf(buf3, sizeof(buf3), "Best => %s", display_time(best_record).c_str()); 
     u8g.firstPage();
     do {
     u8g.setFont(u8g_font_helvB12);
-    u8g.drawStr(0, 13, buf);      
-    u8g.drawStr(0, 35, buf1);
-    u8g.drawStr(0, 55, buf2);   
+    u8g.drawStr(0, 12, buf3);      
+    u8g.drawStr(0, 28, buf);
+    u8g.drawStr(0, 45, buf1);
+    u8g.drawStr(0, 64, buf2);
     } while(u8g.nextPage());                
     delay(15);
     check_btnB();
@@ -129,14 +133,6 @@ void loop()
       time_total = millis();
       car_detectOK = false;
     }
-    // Serial.print(F("cal_dist = "));
-    // Serial.print(cal_dist);
-    // Serial.print(F("\tcar_dist = "));
-    // Serial.print(car_dist);      
-    // Serial.print(F("\tdetect_count = "));
-    // Serial.print(detect_count);
-    // Serial.print(F("\tgRound = "));
-    // Serial.println(gRound);    
     unsigned long tmp_time = millis(); 
     String totaltime = display_time(tmp_time - time_total);
     firstlab = totaltime;
@@ -261,11 +257,11 @@ void car_detect(short x) {
     // Serial.print(cal_dist);
     // Serial.print(F("\tcar_dist = "));
     // Serial.print(car_dist);           
-    // detect_count++;
+    detect_count++;
     // Serial.print(F("\tdetect_count = "));
     // Serial.println(detect_count);  
     if(detect_count > x) { // 차량 검출 확인
-      // Serial.print(F("======================== Car Detected 1111111 "));           
+      Serial.print(F("======================== Car Detected 1111111 "));           
       car_detectOK = true;
       car_dist_show = car_dist - 2;
       detect_count=0;
@@ -290,16 +286,16 @@ void car_detect2(short x) {
   Serial.print(secondlab);
   Serial.print(F("\tthirdlab = "));
   Serial.println(thirdlab);           
-  if(cal_dist > car_dist) {
+  if(cal_dist >= car_dist) {
     detect_count++;
     // Serial.println(F("======================== Car Detected 2 ")); 
-    if(detect_count > x) { // 차량 검출 확인
+    if(detect_count >= x) { // 차량 검출 확인
       // Serial.println(F("======================== Car Detected 222222222 "));  
       gRound++;       
       car_detectOK = true;
       car_dist_show = car_dist - 2;
       detect_count=0;
-      round_interval = 5000;
+      round_interval = 2000;
       if(gRound==1) RGB_color(0, 0, 255); // Blue
       else if(gRound==2) RGB_color(0, 255, 0); // Green
       else RGB_color(255, 0, 0); // Red 
@@ -395,7 +391,7 @@ void start_sound() {
     int noteDuration = 1000 / start_noteDurations[i];
     tone(buzzer, start_melody[i], noteDuration);      
     while (currentSndMillis - previousSndMillis <= 1000) {               
-      car_detect(3); // 출발 중
+      if(i > 3) car_detect(3); // 출발 중
       // Serial.print(F("===========> cal_dist = "));
       // Serial.print(cal_dist);  
       // Serial.print(F("\tcar_dist = "));
@@ -404,7 +400,8 @@ void start_sound() {
       // Serial.println(detect_count);        
       if(car_detectOK) {
         gRound++;
-        round_interval = 5000;
+        round_interval = 2000;
+        RGB_color(0, 0, 255); // Blue
         return;
       }
       currentSndMillis = millis();  
@@ -445,10 +442,10 @@ void check_btnB() {
     }
   }
   // Reset All data
-  btnA_push = 0;
+  btnA_push = 2;
   gRound = 0;
   btnA_flag = false;
-  car_dist = 0;
+  // car_dist = 0;
   car_detectOK = false;
   round_interval = 0;  
 }
@@ -459,7 +456,6 @@ String display_time(unsigned long startMillis) {
   unsigned int min = startMillis/60000;
   unsigned int sec = (startMillis/1000)%60;
   unsigned int mils = (startMillis%1000)/10;
-  // mils = mils/10;
   char buf5[20];
   snprintf(buf5, sizeof(buf5), "%1d:%02d:%02d", min, sec, mils); 
   return buf5;
@@ -491,4 +487,19 @@ void display_message()
         } while(u8g.nextPage());                  
         break;
     } 
+}
+
+void Split(String sData)
+{
+  unsigned long temp_data = best_record;	
+  int first = sData.indexOf(":");// 첫 번째 콤마 위치
+  int second = sData.indexOf(":",first+1); // 두 번째 콤마 위치
+  int length = sData.length(); // 문자열 길이
+ 
+  String str1 = sData.substring(0, first); // 첫 번째 토큰 (0, 3)
+  String str2 = sData.substring(first+1, second); // 두 번째 토큰 (4, 7)
+  String str3 = sData.substring(second+1,length); // 세 번째 토큰(8, 10
+
+  best_record = (str1.toInt()*60000) + (str2.toInt()*1000) + str3.toInt()*10;
+  if(best_record > temp_data) best_record = temp_data;  
 }
