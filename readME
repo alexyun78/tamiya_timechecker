@@ -1,0 +1,67 @@
+1. 부팅시 Logo 출력 - 생략
+2. 버튼 클릭 안내 Press The Button To Calibrate.
+3. 경기 시작전 바닥과의 거리 측정 후 저장.
+4. Calibration 종료 후, Press The Button To START !!!
+5. Ready 3,2,1과 함게 부저음 출력
+6. Let's go START !!! 출력, 이때 차량을 검출하면 타이머 시작 함 
+7. 상단에 저장된 캘리브레이션 거리와 현재 측정한 차량 측정 거리 출력
+8. 차량 검출 후 2초간 전체 구간의 시간과 현재 라운드의 시간을 보여줌
+9. 총 3회 측정애서 게임 종료 함
+10. 게임 종료 후 Best 타임과 1차, 2차, 3차 기록을 보여줌.
+11. 전원 Off전까지는 Best 타임음 갱신전까지 계속 유지함.
+12. 게임 재 시작하려면 B 버튼 누르면 Ready 3,2,1부터 시작 함.
+
+Font 정보
+https://github.com/olikraus/u8glib/wiki/fontsize
+u8g.setFont(u8g_font_helvB10);
+u8g.setFont(u8g_font_helvB12);
+
+Line 2
+u8g.drawBox(0,27,128,24);
+
+Line 3
+u8g.drawBox(0,48,128,24);
+
+====================
+A버튼: 왼쪽 버튼
+B버튼: 오른쪽 버튼
+====================
+1. 버튼을 누르기전
+    Line1 공백
+    Line2 Press The Button
+    Line3 To Calibrate.
+2. A 버튼 2초간 누르면 누름(1번째)
+    Line1 거리 측정 값1, 값2, 값3
+    Line2 Calibration
+    Line3 In Progress...
+3. 캘리브레이션 완료(자동 출력)
+    Line1 캘리브레이션 결과 출력
+    Line2 Calibration
+    Line3 Completed !!!
+4. A 버튼 2초간 누르면 누름(2번째)
+    Line1 캘리브레이션 결과
+    Line2 Press The Button
+    Line3 To START !!!
+5. 출발 신호 소리
+    Line1 캘리브레이션 결과
+    Line2 READY
+    Line3 3, 2, 1 출력
+6. 출발 신호 마지막 소리
+    Line1 캘리브레이션 결과
+    Line2 Let's Go
+    Line3 START !!!
+7. 차량 검출 후 2초간
+    Line1 캘리브레이션 결과, 차량 측정 결과
+    Line2 전체 경기 시간
+    Line3 현재 라운드 시간
+8. 차량 검출 후 2초 이 후
+    Line1 캘리브레이션 결과, 차량 측정 결과, 라운드 표시2
+    Line2 First Round(각 라운드 표시)
+    Line3 In Progress
+9. 차량 3회 검출 이후 게임 종료
+    Line1 Best => 00:00:00 전체 최고 기록 표시
+    Line2 1St ==> 00:00:00 첫번째 라운드 기록 표시
+    Line3 2nd ==> 00:00:00 두번째 라운드 기록 표시
+    Line4 3rd ==> 00:00:00 세번째 라운드 기록 표시
+10. 게임 재 시작
+    1. B 버튼 2초간 누르면 Step 5부터 다시 진행
