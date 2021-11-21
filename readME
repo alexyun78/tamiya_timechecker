@@ -56,7 +56,7 @@ B버튼: 오른쪽 버튼
     Line3 현재 라운드 시간
 8. 차량 검출 후 2초 이 후
     Line1 캘리브레이션 결과, 차량 측정 결과, 라운드 표시2
-    Line2 First Round(각 라운드 표시)
+    Line2 First Round(각 라운드 표시, LED 파란색, 녹색, 빨간색 순서로 변경)
     Line3 In Progress
 9. 차량 3회 검출 이후 게임 종료
     Line1 Best => 00:00:00 전체 최고 기록 표시
